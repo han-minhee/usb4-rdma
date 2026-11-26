@@ -1,0 +1,73 @@
+epoch = 1
+queue_depth = 32
+timeout_ms = 10000
+
+[[nodes]]
+id = 0
+name = "node0"
+
+[[nodes]]
+id = 1
+name = "node1"
+
+[[nodes]]
+id = 2
+name = "node2"
+
+[[nodes]]
+id = 3
+name = "node3"
+
+[[links]]
+id = "l01"
+a = 0
+b = 1
+endpoint_a = "e01a"
+endpoint_b = "e01b"
+controller_a = "c0"
+controller_b = "c0"
+
+[[links]]
+id = "l02"
+a = 0
+b = 2
+endpoint_a = "e02a"
+endpoint_b = "e02b"
+controller_a = "c1"
+controller_b = "c0"
+
+[[links]]
+id = "l03"
+a = 0
+b = 3
+endpoint_a = "e03a"
+endpoint_b = "e03b"
+controller_a = "c2"
+controller_b = "c0"
+
+[[links]]
+id = "l12"
+a = 1
+b = 2
+endpoint_a = "e12a"
+endpoint_b = "e12b"
+controller_a = "c1"
+controller_b = "c1"
+
+[[links]]
+id = "l13"
+a = 1
+b = 3
+endpoint_a = "e13a"
+endpoint_b = "e13b"
+controller_a = "c2"
+controller_b = "c1"
+
+[[links]]
+id = "l23"
+a = 2
+b = 3
+endpoint_a = "e23a"
+endpoint_b = "e23b"
+controller_a = "c2"
+controller_b = "c2"

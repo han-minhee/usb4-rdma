@@ -1,0 +1,29 @@
+[package]
+name = "usb4-rdma-daemon"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Userspace daemon managing USB4 RDMA links, routing, and client shared-memory IPC"
+
+[features]
+default = []
+uring = ["usb4-rdma-transport/uring"]
+
+[dependencies]
+usb4-rdma-core.workspace = true
+usb4-rdma-transport.workspace = true
+usb4-rdma-router.workspace = true
+usb4-rdma-ipc.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+libc.workspace = true
+sha2.workspace = true
+
+[dev-dependencies]
+usb4-rdma.workspace = true
+
+[lints]
+workspace = true

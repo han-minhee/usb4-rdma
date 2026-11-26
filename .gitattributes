@@ -1,0 +1,8 @@
+* text=auto eol=lf
+*.rs text diff=rust
+*.c text diff=c
+*.h text diff=c
+*.sh text eol=lf
+*.toml text
+*.md text
+*.yml text

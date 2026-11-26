@@ -1,0 +1,35 @@
+epoch = 1
+queue_depth = 32
+timeout_ms = 10000
+
+[[nodes]]
+id = 0
+name = "node0"
+
+[[nodes]]
+id = 1
+name = "node1"
+
+[[nodes]]
+id = 2
+name = "node2"
+
+[[links]]
+id = "link01"
+a = 0
+b = 1
+endpoint_a = "/sys/kernel/config/thunderbolt/stream/0-1.0/u4rd"
+endpoint_b = "/sys/kernel/config/thunderbolt/stream/0-1.0/u4rd"
+controller_a = "ctrl0"
+controller_b = "ctrl0"
+speed_mbps = 40000
+
+[[links]]
+id = "link12"
+a = 1
+b = 2
+endpoint_a = "/sys/kernel/config/thunderbolt/stream/1-1.0/u4rd"
+endpoint_b = "/sys/kernel/config/thunderbolt/stream/0-1.0/u4rd"
+controller_a = "ctrl1"
+controller_b = "ctrl0"
+speed_mbps = 40000

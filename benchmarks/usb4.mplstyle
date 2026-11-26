@@ -1,0 +1,34 @@
+# Typography and layout shared by the archived benchmark figures.
+font.family: Source Sans 3, DejaVu Sans
+font.size: 11
+text.color: 14283d
+
+axes.labelcolor: 475d70
+axes.labelsize: 11
+axes.titlecolor: 14283d
+axes.titlesize: 14
+axes.titleweight: bold
+axes.titlepad: 11
+axes.edgecolor: e1e9ef
+axes.facecolor: ffffff
+axes.spines.top: False
+axes.spines.right: False
+axes.axisbelow: True
+
+figure.facecolor: edf3f7
+figure.titlesize: 19
+figure.titleweight: bold
+grid.color: e1e9ef
+grid.linewidth: 0.8
+legend.frameon: False
+
+lines.linewidth: 2.1
+lines.solid_capstyle: round
+lines.solid_joinstyle: round
+xtick.color: 475d70
+ytick.color: 475d70
+xtick.major.size: 0
+ytick.major.size: 0
+xtick.minor.size: 0
+ytick.minor.size: 0
+savefig.dpi: 180

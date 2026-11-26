@@ -1,0 +1,38 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+license = "MIT"
+repository = "https://github.com/han-minhee/usb4-rdma"
+description = "Generic userspace USB4 RDMA transport, routed fabric, daemon, and Rust/C clustering SDK"
+
+[workspace.dependencies]
+usb4-rdma-core = { path = "crates/usb4-rdma-core" }
+usb4-rdma-transport = { path = "crates/usb4-rdma-transport" }
+usb4-rdma-router = { path = "crates/usb4-rdma-router" }
+usb4-rdma-ipc = { path = "crates/usb4-rdma-ipc" }
+usb4-rdma = { path = "crates/usb4-rdma" }
+thiserror = "2"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.9"
+sha2 = "0.10"
+crc32fast = "1"
+libc = "0.2"
+clap = { version = "4", features = ["derive"] }
+libloading = "0.8"
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+
+[workspace.lints.clippy]
+undocumented_unsafe_blocks = "deny"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

@@ -1,0 +1,22 @@
+[package]
+name = "usb4-rdma-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Core protocol framing, RDMA verbs state, and reassembly primitives for usb4-rdma"
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+toml.workspace = true
+sha2.workspace = true
+crc32fast.workspace = true
+
+[dev-dependencies]
+proptest = "1"
+loom = "0.7"
+
+[lints]
+workspace = true

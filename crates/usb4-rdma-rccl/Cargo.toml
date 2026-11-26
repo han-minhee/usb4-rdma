@@ -1,0 +1,28 @@
+[package]
+name = "usb4-rdma-rccl"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "ROCm RCCL v6/v8 network plugin adapter for usb4-rdma"
+
+[lib]
+name = "rccl_net_usb4"
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["hip-staging"]
+hip-staging = ["dep:libloading"]
+
+[dependencies]
+usb4-rdma-core.workspace = true
+usb4-rdma-ipc.workspace = true
+libc.workspace = true
+libloading = { workspace = true, optional = true }
+
+[build-dependencies]
+cc = "1"
+
+[lints]
+workspace = true

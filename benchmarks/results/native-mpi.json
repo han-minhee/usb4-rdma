@@ -1,0 +1,2803 @@
+{
+  "runtime": {
+    "open_mpi": "5.0.11",
+    "libfabric": "2.4.0",
+    "linux": [
+      "7.3.4",
+      "7.3.0"
+    ]
+  },
+  "topology": {
+    "host_count": 2,
+    "ranks_per_host": 1,
+    "usb4_gbit_s_per_cable": 40,
+    "ethernet_gbit_s": 10,
+    "placement": {
+      "rank_logical_cpu": 6,
+      "daemon_logical_cpu": 8
+    },
+    "ring_entries": 256,
+    "interrupt_moderation_ns": 8192,
+    "queue_depth": 64,
+    "spin_us": 200,
+    "active_probe_us": 100
+  },
+  "summary_bulk_gbit_s": {
+    "16777216": {
+      "ethernet": 9.362,
+      "single-a": 6.982,
+      "single-b": 6.951,
+      "dual": 11.559,
+      "paired_ratio_to_fastest_single": 1.6368,
+      "passes_gate": true
+    },
+    "67108864": {
+      "ethernet": 9.399,
+      "single-a": 7.243,
+      "single-b": 7.225,
+      "dual": 12.041,
+      "paired_ratio_to_fastest_single": 1.6666,
+      "passes_gate": true
+    }
+  },
+  "runs": {
+    "ethernet": [
+      {
+        "session": 1,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "0": 5.241643,
+          "1": 5.270743
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 0.2,
+            "read_calls": 18,
+            "write_calls": 9
+          },
+          {
+            "cpu_seconds": 0.24,
+            "read_calls": 10,
+            "write_calls": 13
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 1.9469,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 28.758,
+            "p95_us": 30.657,
+            "p99_us": 31.398
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 40.946,
+            "p95_us": 42.218,
+            "p99_us": 42.779
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 46.831,
+            "p95_us": 48.359,
+            "p99_us": 48.836
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 54.711,
+            "p95_us": 55.613,
+            "p99_us": 56.51
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 188.483,
+            "p95_us": 190.748,
+            "p99_us": 194.164
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 3.231
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1015.297,
+            "p95_us": 1023.803,
+            "p99_us": 1028.693
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 8.533
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3678.824,
+            "p95_us": 3692.103,
+            "p99_us": 3705.793
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 9.187
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 14366.935,
+            "p95_us": 14374.819,
+            "p99_us": 14374.819
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 9.363
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 57143.163,
+            "p95_us": 57155.957,
+            "p99_us": 57155.957
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 9.399
+          }
+        ]
+      },
+      {
+        "session": 2,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "0": 5.251524,
+          "1": 5.279767
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 0.19,
+            "read_calls": 22,
+            "write_calls": 10
+          },
+          {
+            "cpu_seconds": 0.23,
+            "read_calls": 10,
+            "write_calls": 11
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 1.9504,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 29.996,
+            "p95_us": 31.969,
+            "p99_us": 34.169
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 41.391,
+            "p95_us": 43.32,
+            "p99_us": 44.087
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 47.779,
+            "p95_us": 49.707,
+            "p99_us": 51.019
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 56.008,
+            "p95_us": 57.732,
+            "p99_us": 58.148
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 195.611,
+            "p95_us": 200.08,
+            "p99_us": 202.549
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 3.184
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1022.105,
+            "p95_us": 1036.342,
+            "p99_us": 1044.212
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 8.483
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3685.566,
+            "p95_us": 3707.702,
+            "p99_us": 3720.591
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 9.184
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 14371.207,
+            "p95_us": 14384.652,
+            "p99_us": 14384.652
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 9.361
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 57145.057,
+            "p95_us": 57153.884,
+            "p99_us": 57153.884
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 9.399
+          }
+        ]
+      },
+      {
+        "session": 3,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "0": 5.249339,
+          "1": 5.279855
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 0.18,
+            "read_calls": 20,
+            "write_calls": 9
+          },
+          {
+            "cpu_seconds": 0.24,
+            "read_calls": 8,
+            "write_calls": 10
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 1.95,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 30.787,
+            "p95_us": 31.909,
+            "p99_us": 33.201
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 40.791,
+            "p95_us": 44.091,
+            "p99_us": 44.427
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 48.209,
+            "p95_us": 50.509,
+            "p99_us": 51.966
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 55.963,
+            "p95_us": 58.383,
+            "p99_us": 59.705
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 195.281,
+            "p95_us": 198.823,
+            "p99_us": 202.815
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 3.16
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1021.519,
+            "p95_us": 1035.996,
+            "p99_us": 1045.919
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 8.418
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3692.309,
+            "p95_us": 3714.334,
+            "p99_us": 3731.416
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 9.168
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 14378.206,
+            "p95_us": 14390.113,
+            "p99_us": 14390.113
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 9.356
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 57147.817,
+            "p95_us": 57156.949,
+            "p99_us": 57156.949
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 9.399
+          }
+        ]
+      },
+      {
+        "session": 4,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "0": 5.244035,
+          "1": 5.274684
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 0.18,
+            "read_calls": 20,
+            "write_calls": 8
+          },
+          {
+            "cpu_seconds": 0.24,
+            "read_calls": 8,
+            "write_calls": 12
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 1.9481,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 28.974,
+            "p95_us": 30.812,
+            "p99_us": 40.88
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 41.657,
+            "p95_us": 43.401,
+            "p99_us": 44.232
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 47.432,
+            "p95_us": 49.522,
+            "p99_us": 50.403
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 54.846,
+            "p95_us": 56.905,
+            "p99_us": 57.416
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 191.679,
+            "p95_us": 194.695,
+            "p99_us": 197.3
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 3.229
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1014.436,
+            "p95_us": 1027.185,
+            "p99_us": 1034.528
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 8.525
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3680.422,
+            "p95_us": 3694.062,
+            "p99_us": 3709.546
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 9.185
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 14370.171,
+            "p95_us": 14381.447,
+            "p99_us": 14381.447
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 9.362
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 57147.436,
+            "p95_us": 57159.263,
+            "p99_us": 57159.263
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 9.4
+          }
+        ]
+      },
+      {
+        "session": 5,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "0": 5.23719,
+          "1": 5.265647
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 0.18,
+            "read_calls": 20,
+            "write_calls": 9
+          },
+          {
+            "cpu_seconds": 0.24,
+            "read_calls": 10,
+            "write_calls": 11
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 1.9451,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 27.981,
+            "p95_us": 29.925,
+            "p99_us": 30.757
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 40.875,
+            "p95_us": 41.662,
+            "p99_us": 42.113
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 46.22,
+            "p95_us": 47.458,
+            "p99_us": 47.668
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 53.82,
+            "p95_us": 54.937,
+            "p99_us": 55.197
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 185.658,
+            "p95_us": 188.273,
+            "p99_us": 192.471
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 3.335
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1008.721,
+            "p95_us": 1018.183,
+            "p99_us": 1020.883
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 8.55
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3675.493,
+            "p95_us": 3687.6,
+            "p99_us": 3696.731
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 9.193
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 14365.873,
+            "p95_us": 14379.583,
+            "p99_us": 14379.583
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 9.364
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 57140.864,
+            "p95_us": 57147.166,
+            "p99_us": 57147.166
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 9.399
+          }
+        ]
+      }
+    ],
+    "single-a": [
+      {
+        "session": 1,
+        "cables": [
+          1
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.682757,
+          "0": 6.82915
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.16,
+            "read_calls": 803754,
+            "write_calls": 311914
+          },
+          {
+            "cpu_seconds": 8.78,
+            "read_calls": 872598,
+            "write_calls": 311286
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.8249,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 355.663,
+            "p95_us": 755.683,
+            "p99_us": 2110.473
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 372.659,
+            "p95_us": 696.143,
+            "p99_us": 804.533
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 380.424,
+            "p95_us": 776.466,
+            "p99_us": 1031.748
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 403.106,
+            "p95_us": 792.771,
+            "p99_us": 1007.944
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 438.561,
+            "p95_us": 852.276,
+            "p99_us": 1184.58
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.237
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1552.146,
+            "p95_us": 1843.319,
+            "p99_us": 2070.694
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.367
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5081.353,
+            "p95_us": 5494.757,
+            "p99_us": 6456.521
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.7
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 18799.151,
+            "p95_us": 19932.277,
+            "p99_us": 19932.277
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 7.03
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 73181.459,
+            "p95_us": 74363.13,
+            "p99_us": 74363.13
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.267
+          }
+        ]
+      },
+      {
+        "session": 2,
+        "cables": [
+          1
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.727977,
+          "0": 6.859978
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.15,
+            "read_calls": 797890,
+            "write_calls": 311605
+          },
+          {
+            "cpu_seconds": 8.8,
+            "read_calls": 878858,
+            "write_calls": 312554
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.8408,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 399.675,
+            "p95_us": 898.131,
+            "p99_us": 1234.994
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 316.671,
+            "p95_us": 763.387,
+            "p99_us": 1043.179
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 400.861,
+            "p95_us": 888.894,
+            "p99_us": 1114.481
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 403.947,
+            "p95_us": 869.543,
+            "p99_us": 1164.965
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 449.476,
+            "p95_us": 878.665,
+            "p99_us": 1029.224
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.265
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1590.967,
+            "p95_us": 1923.002,
+            "p99_us": 2660.28
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.585
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5060.143,
+            "p95_us": 5498.954,
+            "p99_us": 5823.681
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.648
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 18888.917,
+            "p95_us": 19621.443,
+            "p99_us": 19621.443
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 6.965
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 73040.028,
+            "p95_us": 75128.25,
+            "p99_us": 75128.25
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.243
+          }
+        ]
+      },
+      {
+        "session": 3,
+        "cables": [
+          1
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.659933,
+          "0": 6.789175
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.12,
+            "read_calls": 793936,
+            "write_calls": 310475
+          },
+          {
+            "cpu_seconds": 8.69,
+            "read_calls": 875440,
+            "write_calls": 310554
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.7892,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 312.167,
+            "p95_us": 796.884,
+            "p99_us": 1510.569
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 325.757,
+            "p95_us": 761.188,
+            "p99_us": 872.278
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 388.699,
+            "p95_us": 738.03,
+            "p99_us": 877.548
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 404.283,
+            "p95_us": 740.46,
+            "p99_us": 912.332
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 448.971,
+            "p95_us": 812.393,
+            "p99_us": 960.742
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.282
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1532.248,
+            "p95_us": 1871.155,
+            "p99_us": 1946.389
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.481
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5015.19,
+            "p95_us": 5327.633,
+            "p99_us": 5921.411
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.648
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 18211.41,
+            "p95_us": 19538.985,
+            "p99_us": 19538.985
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 7.062
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 72502.273,
+            "p95_us": 73084.29,
+            "p99_us": 73084.29
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.224
+          }
+        ]
+      },
+      {
+        "session": 4,
+        "cables": [
+          1
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.815871,
+          "0": 6.926719
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.27,
+            "read_calls": 800661,
+            "write_calls": 313006
+          },
+          {
+            "cpu_seconds": 8.89,
+            "read_calls": 886307,
+            "write_calls": 313652
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.9084,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 353.238,
+            "p95_us": 809.312,
+            "p99_us": 1021.97
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 382.418,
+            "p95_us": 816.91,
+            "p99_us": 982.617
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 350.142,
+            "p95_us": 805.174,
+            "p99_us": 901.422
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 399.835,
+            "p95_us": 823.849,
+            "p99_us": 929.349
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 423.719,
+            "p95_us": 880.253,
+            "p99_us": 1081.891
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.342
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1553.338,
+            "p95_us": 2448.854,
+            "p99_us": 2755.991
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.527
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5070.803,
+            "p95_us": 5857.854,
+            "p99_us": 6418.946
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.59
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 18647.972,
+            "p95_us": 20440.532,
+            "p99_us": 20440.532
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 6.871
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 74320.696,
+            "p95_us": 76240.326,
+            "p99_us": 76240.326
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.175
+          }
+        ]
+      },
+      {
+        "session": 5,
+        "cables": [
+          1
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.686978,
+          "0": 6.800234
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.2,
+            "read_calls": 804058,
+            "write_calls": 312221
+          },
+          {
+            "cpu_seconds": 8.8,
+            "read_calls": 877128,
+            "write_calls": 312878
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.8314,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 381.295,
+            "p95_us": 886.976,
+            "p99_us": 1306.642
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 333.026,
+            "p95_us": 711.862,
+            "p99_us": 855.687
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 371.968,
+            "p95_us": 803.526,
+            "p99_us": 1024.781
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 404.072,
+            "p95_us": 779.041,
+            "p99_us": 954.049
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 428.343,
+            "p95_us": 954.24,
+            "p99_us": 1186.884
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.323
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1522.085,
+            "p95_us": 2031.477,
+            "p99_us": 2419.254
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.428
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 4978.182,
+            "p95_us": 5828.704,
+            "p99_us": 6137.46
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.632
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 19036.145,
+            "p95_us": 19783.422,
+            "p99_us": 19783.422
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 6.982
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 73056.007,
+            "p95_us": 75289.348,
+            "p99_us": 75289.348
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.269
+          }
+        ]
+      }
+    ],
+    "single-b": [
+      {
+        "session": 1,
+        "cables": [
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.734971,
+          "0": 6.825337
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.19,
+            "read_calls": 801973,
+            "write_calls": 312737
+          },
+          {
+            "cpu_seconds": 8.83,
+            "read_calls": 882440,
+            "write_calls": 311916
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.8487,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 357.772,
+            "p95_us": 779.717,
+            "p99_us": 1097.129
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 336.968,
+            "p95_us": 861.819,
+            "p99_us": 1194.158
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 376.817,
+            "p95_us": 874.397,
+            "p99_us": 1285.733
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 389.36,
+            "p95_us": 860.256,
+            "p99_us": 1178.79
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 431.543,
+            "p95_us": 875.705,
+            "p99_us": 1076.08
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.272
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1523.643,
+            "p95_us": 2130.966,
+            "p99_us": 2544.591
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.652
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5082.74,
+            "p95_us": 6018.36,
+            "p99_us": 6252.488
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.684
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 18915.006,
+            "p95_us": 20124.948,
+            "p99_us": 20124.948
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 6.951
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 73372.753,
+            "p95_us": 75806.785,
+            "p99_us": 75806.785
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.244
+          }
+        ]
+      },
+      {
+        "session": 2,
+        "cables": [
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.830189,
+          "0": 6.931465
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.25,
+            "read_calls": 808488,
+            "write_calls": 313575
+          },
+          {
+            "cpu_seconds": 8.89,
+            "read_calls": 882544,
+            "write_calls": 313770
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.9082,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 326.654,
+            "p95_us": 714.11,
+            "p99_us": 1257.185
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 356.564,
+            "p95_us": 663.848,
+            "p99_us": 932.209
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 371.802,
+            "p95_us": 771.131,
+            "p99_us": 1050.112
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 391.695,
+            "p95_us": 755.772,
+            "p99_us": 1176.181
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 435.2,
+            "p95_us": 871.958,
+            "p99_us": 1293.627
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.241
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1594.263,
+            "p95_us": 2305.914,
+            "p99_us": 2688.086
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.494
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5040.627,
+            "p95_us": 5903.117,
+            "p99_us": 6067.306
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.533
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 19103.81,
+            "p95_us": 20736.294,
+            "p99_us": 20736.294
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 6.866
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 73926.361,
+            "p95_us": 77366.504,
+            "p99_us": 77366.504
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.233
+          }
+        ]
+      },
+      {
+        "session": 3,
+        "cables": [
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.667386,
+          "0": 6.766987
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.12,
+            "read_calls": 795925,
+            "write_calls": 311094
+          },
+          {
+            "cpu_seconds": 8.72,
+            "read_calls": 875546,
+            "write_calls": 310761
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.792,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 329.234,
+            "p95_us": 847.221,
+            "p99_us": 1120.587
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 350.368,
+            "p95_us": 765.711,
+            "p99_us": 1132.82
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 402.469,
+            "p95_us": 823.207,
+            "p99_us": 1148.71
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 375.104,
+            "p95_us": 754.481,
+            "p99_us": 913.359
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 440.705,
+            "p95_us": 811.786,
+            "p99_us": 1148.278
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.322
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1597.108,
+            "p95_us": 2021.333,
+            "p99_us": 2475.408
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.64
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5034.486,
+            "p95_us": 5634.605,
+            "p99_us": 5872.545
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.708
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 18565.424,
+            "p95_us": 20061.431,
+            "p99_us": 20061.431
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 7.017
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 72919.8,
+            "p95_us": 74837.161,
+            "p99_us": 74837.161
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.225
+          }
+        ]
+      },
+      {
+        "session": 4,
+        "cables": [
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.677556,
+          "0": 6.812872
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.17,
+            "read_calls": 789847,
+            "write_calls": 310556
+          },
+          {
+            "cpu_seconds": 8.76,
+            "read_calls": 876949,
+            "write_calls": 312136
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.8191,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 342.909,
+            "p95_us": 755.783,
+            "p99_us": 876.466
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 388.007,
+            "p95_us": 663.012,
+            "p99_us": 884.08
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 403.436,
+            "p95_us": 778.885,
+            "p99_us": 1052.958
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 388.914,
+            "p95_us": 805.544,
+            "p99_us": 1053.288
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 428.292,
+            "p95_us": 864.203,
+            "p99_us": 961.383
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.275
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1561.653,
+            "p95_us": 1991.809,
+            "p99_us": 2177.572
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.593
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5095.578,
+            "p95_us": 5651.446,
+            "p99_us": 5783.611
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.694
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 18590.912,
+            "p95_us": 19943.342,
+            "p99_us": 19943.342
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 6.888
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 72506.2,
+            "p95_us": 74263.004,
+            "p99_us": 74263.004
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.207
+          }
+        ]
+      },
+      {
+        "session": 5,
+        "cables": [
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            3744479876
+          ],
+          [
+            2053646740
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 7.739055,
+          "0": 6.804363
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 8.18,
+            "read_calls": 796709,
+            "write_calls": 311668
+          },
+          {
+            "cpu_seconds": 8.79,
+            "read_calls": 878315,
+            "write_calls": 312031
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 5.8363,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 306.762,
+            "p95_us": 748.028,
+            "p99_us": 1283.288
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 399.123,
+            "p95_us": 754.811,
+            "p99_us": 895.135
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 404.163,
+            "p95_us": 658.603,
+            "p99_us": 948.789
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 405.344,
+            "p95_us": 706.386,
+            "p99_us": 972.238
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 459.185,
+            "p95_us": 809.357,
+            "p99_us": 1009.953
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.248
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1608.85,
+            "p95_us": 2222.094,
+            "p99_us": 2439.977
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 5.556
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 5033.038,
+            "p95_us": 5792.623,
+            "p99_us": 6018.295
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 6.614
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 18528.872,
+            "p95_us": 20080.32,
+            "p99_us": 20080.32
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 6.962
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 73124.609,
+            "p95_us": 74445.206,
+            "p99_us": 74445.206
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 7.193
+          }
+        ]
+      }
+    ],
+    "dual": [
+      {
+        "session": 1,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            1875224912,
+            1869254964
+          ],
+          [
+            1029819760,
+            1023826980
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 5.101837,
+          "0": 4.587238
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 5.81,
+            "read_calls": 780040,
+            "write_calls": 376041
+          },
+          {
+            "cpu_seconds": 6.23,
+            "read_calls": 797865,
+            "write_calls": 386534
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 4.0242,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 381.641,
+            "p95_us": 804.558,
+            "p99_us": 1079.772
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 402.634,
+            "p95_us": 753.584,
+            "p99_us": 907.228
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 403.316,
+            "p95_us": 779.571,
+            "p99_us": 1035.4
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 406.056,
+            "p95_us": 825.843,
+            "p99_us": 978.254
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 432.189,
+            "p95_us": 913.254,
+            "p99_us": 1175.358
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.355
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1082.713,
+            "p95_us": 1610.333,
+            "p99_us": 1794.744
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 8.018
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3079.905,
+            "p95_us": 3830.935,
+            "p99_us": 3980.602
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 10.32
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 11018.798,
+            "p95_us": 11919.168,
+            "p99_us": 11919.168
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 10.966
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 41410.168,
+            "p95_us": 43641.975,
+            "p99_us": 43641.975
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 12.435
+          }
+        ]
+      },
+      {
+        "session": 2,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            1875241708,
+            1869238168
+          ],
+          [
+            1029836056,
+            1023810684
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 5.10008,
+          "0": 4.561561
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 5.81,
+            "read_calls": 781250,
+            "write_calls": 376945
+          },
+          {
+            "cpu_seconds": 6.2,
+            "read_calls": 792258,
+            "write_calls": 385934
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 4.0136,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 402.535,
+            "p95_us": 831.533,
+            "p99_us": 1003.035
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 403.031,
+            "p95_us": 779.857,
+            "p99_us": 1086.97
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 396.829,
+            "p95_us": 787.862,
+            "p99_us": 961.549
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 406.928,
+            "p95_us": 810.334,
+            "p99_us": 1220.653
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 451.81,
+            "p95_us": 861.418,
+            "p99_us": 1134.112
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.36
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1129.013,
+            "p95_us": 1505.364,
+            "p99_us": 1891.798
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 7.852
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3180.156,
+            "p95_us": 4020.981,
+            "p99_us": 5534.19
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 10.803
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 11093.851,
+            "p95_us": 13003.964,
+            "p99_us": 13003.964
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 11.099
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 40904.658,
+            "p95_us": 42114.039,
+            "p99_us": 42114.039
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 12.615
+          }
+        ]
+      },
+      {
+        "session": 3,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            1875241284,
+            1869238592
+          ],
+          [
+            1029837400,
+            1023809340
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 5.143668,
+          "0": 4.610775
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 5.85,
+            "read_calls": 780206,
+            "write_calls": 377144
+          },
+          {
+            "cpu_seconds": 6.27,
+            "read_calls": 801025,
+            "write_calls": 388115
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 4.0511,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 403.115,
+            "p95_us": 771.557,
+            "p99_us": 1112.347
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 406.097,
+            "p95_us": 730.0,
+            "p99_us": 851.85
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 403.967,
+            "p95_us": 733.882,
+            "p99_us": 905.389
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 410.188,
+            "p95_us": 841.251,
+            "p99_us": 1027.109
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 450.428,
+            "p95_us": 869.664,
+            "p99_us": 1162.736
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.309
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1136.291,
+            "p95_us": 1715.998,
+            "p99_us": 2331.663
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 7.685
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3144.245,
+            "p95_us": 3821.393,
+            "p99_us": 4167.372
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 10.621
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 11441.219,
+            "p95_us": 12970.863,
+            "p99_us": 12970.863
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 11.559
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 41316.9,
+            "p95_us": 42983.297,
+            "p99_us": 42983.297
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 12.041
+          }
+        ]
+      },
+      {
+        "session": 4,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            1875241716,
+            1869238160
+          ],
+          [
+            1029838104,
+            1023808636
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 5.123222,
+          "0": 4.570784
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 5.84,
+            "read_calls": 776722,
+            "write_calls": 375833
+          },
+          {
+            "cpu_seconds": 6.22,
+            "read_calls": 795120,
+            "write_calls": 385447
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 4.0288,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 386.529,
+            "p95_us": 806.306,
+            "p99_us": 951.67
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 402.234,
+            "p95_us": 707.047,
+            "p99_us": 912.914
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 403.826,
+            "p95_us": 757.942,
+            "p99_us": 950.447
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 403.772,
+            "p95_us": 763.301,
+            "p99_us": 955.447
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 455.673,
+            "p95_us": 913.053,
+            "p99_us": 1515.879
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.405
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1109.868,
+            "p95_us": 1805.8,
+            "p99_us": 2100.695
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 8.217
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3157.664,
+            "p95_us": 3915.837,
+            "p99_us": 4423.18
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 10.835
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 11025.996,
+            "p95_us": 12147.946,
+            "p99_us": 12147.946
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 11.818
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 41627.168,
+            "p95_us": 44360.284,
+            "p99_us": 44360.284
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 11.992
+          }
+        ]
+      },
+      {
+        "session": 5,
+        "cables": [
+          1,
+          2
+        ],
+        "per_link_sent_bytes_by_rank": [
+          [
+            1875257740,
+            1869222136
+          ],
+          [
+            1029837536,
+            1023809204
+          ]
+        ],
+        "rank_cpu_seconds": {
+          "1": 5.178632,
+          "0": 4.617393
+        },
+        "daemon_usage": [
+          {
+            "cpu_seconds": 5.89,
+            "read_calls": 810949,
+            "write_calls": 381874
+          },
+          {
+            "cpu_seconds": 6.28,
+            "read_calls": 804474,
+            "write_calls": 386966
+          }
+        ],
+        "application_payload_bytes": 5797743808,
+        "cpu_seconds_per_gib": 4.0681,
+        "measurements": [
+          {
+            "metric": "half-rtt",
+            "bytes": 8,
+            "iterations": 200,
+            "p50_us": 388.734,
+            "p95_us": 851.505,
+            "p99_us": 1275.498
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4096,
+            "iterations": 200,
+            "p50_us": 378.245,
+            "p95_us": 742.258,
+            "p99_us": 1004.953
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 8192,
+            "iterations": 200,
+            "p50_us": 402.169,
+            "p95_us": 780.599,
+            "p99_us": 1004.783
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16384,
+            "iterations": 200,
+            "p50_us": 406.301,
+            "p95_us": 833.467,
+            "p99_us": 978.595
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 65536,
+            "iterations": 200,
+            "p50_us": 453.198,
+            "p95_us": 893.633,
+            "p99_us": 1164.008
+          },
+          {
+            "metric": "one-way",
+            "bytes": 65536,
+            "iterations": 200,
+            "gbits_s": 1.333
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 1048576,
+            "iterations": 64,
+            "p50_us": 1077.408,
+            "p95_us": 1766.221,
+            "p99_us": 2352.776
+          },
+          {
+            "metric": "one-way",
+            "bytes": 1048576,
+            "iterations": 64,
+            "gbits_s": 7.497
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 4194304,
+            "iterations": 64,
+            "p50_us": 3234.818,
+            "p95_us": 4452.82,
+            "p99_us": 5076.88
+          },
+          {
+            "metric": "one-way",
+            "bytes": 4194304,
+            "iterations": 64,
+            "gbits_s": 10.599
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 16777216,
+            "iterations": 16,
+            "p50_us": 10945.111,
+            "p95_us": 12007.767,
+            "p99_us": 12007.767
+          },
+          {
+            "metric": "one-way",
+            "bytes": 16777216,
+            "iterations": 16,
+            "gbits_s": 11.862
+          },
+          {
+            "metric": "half-rtt",
+            "bytes": 67108864,
+            "iterations": 16,
+            "p50_us": 41548.132,
+            "p95_us": 43748.803,
+            "p99_us": 43748.803
+          },
+          {
+            "metric": "one-way",
+            "bytes": 67108864,
+            "iterations": 16,
+            "gbits_s": 11.764
+          }
+        ]
+      }
+    ]
+  }
+}

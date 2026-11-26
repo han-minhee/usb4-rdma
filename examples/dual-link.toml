@@ -1,0 +1,30 @@
+epoch = 1
+timeout_ms = 10000
+
+[[nodes]]
+id = 0
+name = "node0"
+
+[[nodes]]
+id = 1
+name = "node1"
+
+[[links]]
+id = "cable0"
+a = 0
+b = 1
+endpoint_a = "/sys/kernel/config/thunderbolt/stream/0-1.0/u4rd0"
+endpoint_b = "/sys/kernel/config/thunderbolt/stream/0-1.0/u4rd0"
+controller_a = "ctrl0"
+controller_b = "ctrl0"
+speed_mbps = 40000
+
+[[links]]
+id = "cable1"
+a = 0
+b = 1
+endpoint_a = "/sys/kernel/config/thunderbolt/stream/1-1.0/u4rd1"
+endpoint_b = "/sys/kernel/config/thunderbolt/stream/1-1.0/u4rd1"
+controller_a = "ctrl1"
+controller_b = "ctrl1"
+speed_mbps = 40000

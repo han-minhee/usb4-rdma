@@ -1,0 +1,75 @@
+{
+  "correctness": [
+    {
+      "cables": [
+        1
+      ],
+      "ranks_per_host": 2,
+      "payload_by_rank": [
+        [
+          89233652
+        ],
+        [
+          89233448
+        ]
+      ]
+    },
+    {
+      "cables": [
+        2
+      ],
+      "ranks_per_host": 2,
+      "payload_by_rank": [
+        [
+          89233652
+        ],
+        [
+          89233448
+        ]
+      ]
+    },
+    {
+      "cables": [
+        1,
+        2
+      ],
+      "ranks_per_host": 2,
+      "payload_by_rank": [
+        [
+          44634432,
+          44599220
+        ],
+        [
+          44602460,
+          44630988
+        ]
+      ]
+    }
+  ],
+  "peer_loss": {
+    "action": "terminated the peer daemon",
+    "injected_after_payload": true,
+    "elapsed_seconds": 1.911,
+    "nonzero_exit": true
+  },
+  "soak": {
+    "ranks_per_host": 2,
+    "cables": [
+      1,
+      2
+    ],
+    "soak_seconds": 1800.0,
+    "soak_rounds": 2197656,
+    "payload_by_rank": [
+      [
+        213816583652,
+        205080462732
+      ],
+      [
+        209506773740,
+        209386976016
+      ]
+    ]
+  },
+  "ready_and_progressing_snapshots": 29
+}

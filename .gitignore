@@ -1,0 +1,12 @@
+/target
+**/*.rs.bk
+*.swp
+*.swo
+.DS_Store
+/.ruff_cache
+**/__pycache__/
+**/*.pyc
+/tests/c_api_test
+/tests/*.dSYM
+
+/.venv/

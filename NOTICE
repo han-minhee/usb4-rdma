@@ -1,0 +1,7 @@
+usb4-rdma
+
+The standalone USB4STREAM benchmark in benchmarks/stream-roofline.c
+adapts tests/stream_roofline.c from halo-usb4 (revision e245bd8).
+The usb4-rdma adaptation changes the command line and adds latency
+measurement and result reporting, and is distributed under the MIT
+License (see LICENSE).
