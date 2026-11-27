@@ -20,7 +20,7 @@ mod service;
 pub mod tagged;
 
 pub use context::{CompletionQueue, Context, FabricStats, ProtectionDomain};
-pub use fabric::{Fabric, Routes};
+pub use fabric::{Fabric, LinkFailure, LinkFailureCause, Routes};
 pub use mr::{BorrowedMr, MrRef, OwnedMr};
 pub use mr_table::DEFAULT_MAX_MR_BYTES;
 pub use qp::{ConnectionRequest, Listener, QueuePair};

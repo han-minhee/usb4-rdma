@@ -18,3 +18,13 @@ Configure `PKG_CONFIG_PATH` and `LD_LIBRARY_PATH` for a user-installed libfabric
 - `emulated` runs the same reactor on Unix sockets. `emulated-uring` tests registered I/O and CQEs on Linux without physical USB4 devices.
 
 Report simulator, multiprocess emulation, Linux `io_uring`, physical USB4STREAM, and accelerator runtime evidence individually.
+
+## Link failure diagnostics
+
+When fabric polling fails on a specific link, `usb4-rdma-ctl serve` reports the
+local node and epoch, the zero-based local port, its configured link ID, and
+the peer node. The local port order matches `monitor --links`. The cause
+records an unready link at the startup deadline, a missed heartbeat deadline,
+a closed stream, or an error while polling that link. The command still
+reports the original error. The local stop flag describes the state when the
+diagnostic is logged and cannot establish which peer began teardown.

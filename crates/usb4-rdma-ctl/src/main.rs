@@ -220,7 +220,23 @@ fn main() -> anyhow::Result<()> {
                 c.queue_depth
             );
             Service::with_max_mr_bytes(fabric, server, c.timeout_ms, max_mr_bytes)
-                .run(spin_us, lifecycle::stopping)?;
+                .run_with_link_failure_report(spin_us, lifecycle::stopping, |failure| {
+                    // open_links supplies the backends in local configuration order.
+                    let link = c
+                        .links
+                        .iter()
+                        .filter(|link| link.a == node || link.b == node)
+                        .nth(failure.port)
+                        .map_or("<unknown>", |link| link.id.as_str());
+                    eprintln!(
+                        "usb4-rdma link failure node={node} epoch={} port={} peer={} link={link:?} cause={} local_stop_requested={}",
+                        c.epoch,
+                        failure.port,
+                        failure.peer,
+                        failure.cause,
+                        lifecycle::stopping()
+                    );
+                })?;
         }
         Command::Monitor { socket, links } => {
             let mut c = usb4_rdma_core::ipc::Client::connect(&socket)?;

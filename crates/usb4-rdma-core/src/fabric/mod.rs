@@ -15,6 +15,37 @@ use usb4_stream_hal::{Event, FastPoll, StreamTransport};
 
 type LocalRxCallback<'a> = &'a mut dyn FnMut(FrameHeader, &[u8]) -> Result<()>;
 
+/// The event observed on a link when a fabric epoch failed.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
+pub enum LinkFailureCause {
+    StartupTimeout,
+    HeartbeatTimeout,
+    Closed,
+    PollError,
+}
+
+impl std::fmt::Display for LinkFailureCause {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::StartupTimeout => "startup-timeout",
+            Self::HeartbeatTimeout => "heartbeat-timeout",
+            Self::Closed => "closed",
+            Self::PollError => "poll-error",
+        })
+    }
+}
+
+/// Local observation of a terminal link failure in a fabric epoch.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[non_exhaustive]
+pub struct LinkFailure {
+    /// Zero-based position in the link list supplied to the fabric.
+    pub port: usize,
+    pub peer: NodeId,
+    pub cause: LinkFailureCause,
+}
+
 struct Port {
     peer: NodeId,
     backend: Box<dyn StreamTransport>,
@@ -49,6 +80,7 @@ pub struct Fabric {
     delivered: VecDeque<(usize, Packet)>,
     delivered_control: VecDeque<Packet>,
     failed: bool,
+    link_failure: Option<LinkFailure>,
     started: Instant,
     startup_timeout: Duration,
     active_probe_interval: Duration,
@@ -147,6 +179,7 @@ impl Fabric {
             delivered: VecDeque::with_capacity(capacity),
             delivered_control: VecDeque::with_capacity(control_capacity),
             failed: false,
+            link_failure: None,
             started: now,
             startup_timeout: Duration::from_millis(c.timeout_ms),
             active_probe_interval: Duration::from_millis(1),
@@ -183,6 +216,19 @@ impl Fabric {
 
     pub fn failed(&self) -> bool {
         self.failed
+    }
+
+    /// Returns link-specific evidence when fabric polling observed a terminal link failure.
+    pub fn link_failure(&self) -> Option<LinkFailure> {
+        self.link_failure
+    }
+
+    fn record_link_failure(&mut self, port: usize, cause: LinkFailureCause) {
+        self.link_failure = Some(LinkFailure {
+            port,
+            peer: self.ports[port].peer,
+            cause,
+        });
     }
 
     /// Data counters in the order the caller supplied the link backends.
@@ -529,6 +575,9 @@ impl Fabric {
         let result = if !self.ready()
             && now.saturating_duration_since(self.started) >= self.startup_timeout
         {
+            if let Some(index) = self.ports.iter().position(|port| !port.ready) {
+                self.record_link_failure(index, LinkFailureCause::StartupTimeout);
+            }
             Err(Error::Timeout)
         } else {
             self.progress(now, on_local)
@@ -628,6 +677,7 @@ impl Fabric {
         for i in 0..self.ports.len() {
             let p = &mut self.ports[i];
             if p.ready && now.saturating_duration_since(p.last_pong) >= self.startup_timeout {
+                self.record_link_failure(i, LinkFailureCause::HeartbeatTimeout);
                 return Err(Error::Timeout);
             }
             let interval = if p.ready
@@ -675,7 +725,7 @@ impl Fabric {
         for i in 0..self.ports.len() {
             let mut credit_delta = [0usize; 2];
             for _ in 0..64 {
-                let fast = if let Some(cb) = on_local.as_deref_mut() {
+                let polled = if let Some(cb) = on_local.as_deref_mut() {
                     let p = &mut self.ports[i];
                     let node = self.node;
                     let epoch = self.routes.epoch;
@@ -734,13 +784,16 @@ impl Fabric {
                         cb(h, payload)?;
                         Ok(true)
                     };
-                    p.backend.poll_fast(&mut on_rx)?
+                    p.backend.poll_fast(&mut on_rx)
                 } else {
-                    match self.ports[i].backend.poll()? {
-                        Some(e) => FastPoll::Event(e),
-                        None => FastPoll::None,
-                    }
+                    self.ports[i]
+                        .backend
+                        .poll()
+                        .map(|event| event.map_or(FastPoll::None, FastPoll::Event))
                 };
+                let fast = polled.inspect_err(|_| {
+                    self.record_link_failure(i, LinkFailureCause::PollError);
+                })?;
                 match fast {
                     FastPoll::Delivered => {
                         progress = true;
@@ -748,7 +801,10 @@ impl Fabric {
                     FastPoll::Event(event) => {
                         progress = true;
                         match event {
-                            Event::Closed => return Err(Error::Disconnected),
+                            Event::Closed => {
+                                self.record_link_failure(i, LinkFailureCause::Closed);
+                                return Err(Error::Disconnected);
+                            }
                             Event::Sent(_, bytes) => {
                                 self.ports[i].inflight_bytes = self.ports[i]
                                     .inflight_bytes
@@ -1001,6 +1057,37 @@ mod tests {
         }
     }
 
+    fn bonded_pair_cluster(timeout_ms: u64) -> Cluster {
+        let mut c = pair_cluster(timeout_ms);
+        c.links.push(Link {
+            id: "l1".into(),
+            a: 0,
+            b: 1,
+            endpoint_a: "e2".into(),
+            endpoint_b: "e3".into(),
+            controller_a: "c1".into(),
+            controller_b: "c1".into(),
+            speed_mbps: 40000,
+        });
+        c
+    }
+
+    #[test]
+    fn startup_timeout_reports_unready_link() {
+        let (link, _peer) = link_pair();
+        let mut fabric = Fabric::new(&pair_cluster(100), 0, vec![Box::new(link)]).unwrap();
+        let expired = fabric.started + Duration::from_millis(100);
+        assert!(matches!(fabric.poll_at(expired), Err(Error::Timeout)));
+        assert_eq!(
+            fabric.link_failure(),
+            Some(LinkFailure {
+                port: 0,
+                peer: 1,
+                cause: LinkFailureCause::StartupTimeout,
+            })
+        );
+    }
+
     #[test]
     fn handshake_and_liveness_timeout_with_injected_time() {
         let c = pair_cluster(100);
@@ -1021,6 +1108,45 @@ mod tests {
         let expired = base + Duration::from_secs(5);
         assert!(matches!(f0.poll_at(expired), Err(Error::Timeout)));
         assert!(f0.failed());
+        assert_eq!(
+            f0.link_failure(),
+            Some(LinkFailure {
+                port: 0,
+                peer: 1,
+                cause: LinkFailureCause::HeartbeatTimeout,
+            })
+        );
+    }
+
+    #[test]
+    fn bond_peer_close_reports_the_local_link_and_stays_terminal() {
+        let c = bonded_pair_cluster(1000);
+        let (a0, b0) = link_pair();
+        let (a1, b1) = link_pair();
+        let mut f0 = Fabric::new(&c, 0, vec![Box::new(a0), Box::new(a1)]).unwrap();
+        let mut f1 = Fabric::new(&c, 1, vec![Box::new(b0), Box::new(b1)]).unwrap();
+        let now = Instant::now();
+        for _ in 0..10 {
+            f0.poll_at(now).unwrap();
+            f1.poll_at(now).unwrap();
+            if f0.ready() && f1.ready() {
+                break;
+            }
+        }
+        assert!(f0.ready() && f1.ready());
+        assert!(f0.link_failure().is_none());
+
+        drop(f1.ports.remove(1));
+        assert!(matches!(f0.poll_at(now), Err(Error::Disconnected)));
+        assert!(f0.failed() && !f0.ready());
+        let failure = Some(LinkFailure {
+            port: 1,
+            peer: 1,
+            cause: LinkFailureCause::Closed,
+        });
+        assert_eq!(f0.link_failure(), failure);
+        assert!(matches!(f0.poll_at(now), Err(Error::Disconnected)));
+        assert_eq!(f0.link_failure(), failure);
     }
 
     #[test]
@@ -1048,17 +1174,7 @@ mod tests {
 
     #[test]
     fn small_messages_balance_across_equal_parallel_links() {
-        let mut c = pair_cluster(1000);
-        c.links.push(Link {
-            id: "l1".into(),
-            a: 0,
-            b: 1,
-            endpoint_a: "e2".into(),
-            endpoint_b: "e3".into(),
-            controller_a: "c1".into(),
-            controller_b: "c1".into(),
-            speed_mbps: 40000,
-        });
+        let c = bonded_pair_cluster(1000);
         let (a0, b0) = link_pair();
         let (a1, b1) = link_pair();
         let mut f0 = Fabric::new(&c, 0, vec![Box::new(a0), Box::new(a1)]).unwrap();
@@ -1100,17 +1216,7 @@ mod tests {
 
     #[test]
     fn rts_waits_for_its_configured_link_and_preserves_order() {
-        let mut c = pair_cluster(1000);
-        c.links.push(Link {
-            id: "l1".into(),
-            a: 0,
-            b: 1,
-            endpoint_a: "e2".into(),
-            endpoint_b: "e3".into(),
-            controller_a: "c1".into(),
-            controller_b: "c1".into(),
-            speed_mbps: 40000,
-        });
+        let c = bonded_pair_cluster(1000);
         let (a0, b0) = link_pair();
         let (a1, b1) = link_pair();
         let mut f0 = Fabric::new(&c, 0, vec![Box::new(a0), Box::new(a1)]).unwrap();
