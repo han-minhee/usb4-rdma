@@ -909,7 +909,7 @@ checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 
 [[package]]
 name = "usb4-gpu-staging"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "libloading",
  "usb4-proto",
@@ -917,14 +917,14 @@ dependencies = [
 
 [[package]]
 name = "usb4-llama-rpc"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "usb4-rdma-core",
 ]
 
 [[package]]
 name = "usb4-nccl-net"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "cc",
  "libc",
@@ -934,7 +934,7 @@ dependencies = [
 
 [[package]]
 name = "usb4-ofi-provider"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "cc",
  "libc",
@@ -944,7 +944,7 @@ dependencies = [
 
 [[package]]
 name = "usb4-proto"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "crc32fast",
  "proptest",
@@ -954,7 +954,7 @@ dependencies = [
 
 [[package]]
 name = "usb4-rdma-core"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "libc",
  "loom",
@@ -967,7 +967,7 @@ dependencies = [
 
 [[package]]
 name = "usb4-rdma-ctl"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -983,7 +983,7 @@ dependencies = [
 
 [[package]]
 name = "usb4-sim"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "libc",
  "usb4-proto",
@@ -993,7 +993,7 @@ dependencies = [
 
 [[package]]
 name = "usb4-stream-hal"
-version = "0.2.0"
+version = "0.1.0"
 dependencies = [
  "io-uring",
  "libc",

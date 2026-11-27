@@ -1,4 +1,39 @@
-# Linux release
+# Release
+
+## Rust crates
+
+The `0.1.0` crate release includes the Rust SDK, daemon CLI, wire codec,
+transport backends, simulator, GPU staging, and the three native plugin
+source packages. The release uses wire protocol and daemon IPC version 2.
+See the [crate README](../crates/README.md) for installation and usage.
+
+Use the pinned Rust toolchain and the Linux prerequisites in
+[Development](DEVELOPMENT.md). From a clean release commit, run:
+
+```sh
+sh scripts/check.sh
+cargo package --workspace --locked --all-features
+```
+
+Cargo verifies all nine archives in `target/package` using their normalized
+manifests. Check that all archives contain the README and MIT license, and
+that `usb4-llama-rpc` includes `include/usb4_rpc.h`.
+
+After release approval, authenticate with crates.io via `cargo login` and
+publish the workspace in dependency order:
+
+```sh
+cargo publish --dry-run --workspace --locked --all-features
+cargo publish --workspace --locked --all-features
+```
+
+If publishing stops partway, check which `0.1.0` packages are visible in
+the index before retrying. Exclude the versions already uploaded with
+`--exclude <crate>` for each published workspace member. After the uploads,
+verify `cargo install usb4-rdma-ctl --version 0.1.0 --locked` and
+`usb4-rdma-ctl --version` from a clean install directory.
+
+## Linux bundle
 
 Build at a clean Git revision on x86-64 Linux using the [development prerequisites](DEVELOPMENT.md). The current bundle contains `usb4-rdma-ctl`, the OFI and ggml-rpc libraries, the RPC C header, and independent CUDA and ROCm builds of the network plugin. Install matching libfabric before loading the OFI provider.
 
