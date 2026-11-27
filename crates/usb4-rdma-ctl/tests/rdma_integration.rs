@@ -2,6 +2,11 @@
 
 use std::{
     fs,
+    io::{Read, Write},
+    os::{
+        fd::AsRawFd,
+        unix::{net::UnixStream, process::CommandExt},
+    },
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::atomic::{AtomicU64, Ordering},
@@ -15,10 +20,15 @@ struct TestCluster {
     dir: PathBuf,
     children: Vec<Child>,
     sockets: Vec<PathBuf>,
+    controls: Vec<UnixStream>,
 }
 
 impl TestCluster {
     fn spawn(config_toml: &str, node_ids: &[u32]) -> Self {
+        Self::spawn_inner(config_toml, node_ids, false)
+    }
+
+    fn spawn_inner(config_toml: &str, node_ids: &[u32], controlled_stop: bool) -> Self {
         let seq = TEST_SEQ.fetch_add(1, Ordering::Relaxed);
         let dir = std::env::temp_dir().join(format!("u4rd-it-{}-{seq}", std::process::id()));
         fs::create_dir_all(&dir).unwrap();
@@ -28,11 +38,16 @@ impl TestCluster {
         fs::create_dir_all(&emu_dir).unwrap();
 
         let bin = env!("CARGO_BIN_EXE_usb4-rdma-ctl");
-        let mut children = Vec::new();
-        let mut sockets = Vec::new();
+        let mut cluster = Self {
+            dir,
+            children: Vec::new(),
+            sockets: Vec::new(),
+            controls: Vec::new(),
+        };
         for &node in node_ids {
-            let sock = dir.join(format!("n{node}.sock"));
-            let child = Command::new(bin)
+            let sock = cluster.dir.join(format!("n{node}.sock"));
+            let mut command = Command::new(bin);
+            command
                 .args([
                     "serve",
                     "--config",
@@ -47,16 +62,42 @@ impl TestCluster {
                     emu_dir.to_str().unwrap(),
                 ])
                 .stderr(Stdio::null())
-                .stdout(Stdio::null())
-                .spawn()
-                .expect("spawn usb4-rdma-ctl");
-            children.push(child);
-            sockets.push(sock);
+                .stdout(Stdio::null());
+            if controlled_stop {
+                const CHILD_FD: i32 = 198;
+                let (owner, control) = UnixStream::pair().unwrap();
+                owner
+                    .set_read_timeout(Some(Duration::from_secs(3)))
+                    .unwrap();
+                let fd = control.as_raw_fd();
+                command.args(["--shutdown-fd", &CHILD_FD.to_string()]);
+                // SAFETY: control remains live through spawn. The child only runs
+                // async-signal-safe FD operations before exec. Its copy is private.
+                unsafe {
+                    command.pre_exec(move || {
+                        if libc::dup2(fd, CHILD_FD) < 0
+                            || libc::fcntl(CHILD_FD, libc::F_SETFD, 0) < 0
+                        {
+                            return Err(std::io::Error::last_os_error());
+                        }
+                        Ok(())
+                    });
+                }
+                cluster
+                    .children
+                    .push(command.spawn().expect("spawn controlled daemon"));
+                cluster.controls.push(owner);
+            } else {
+                cluster
+                    .children
+                    .push(command.spawn().expect("spawn usb4-rdma-ctl"));
+            }
+            cluster.sockets.push(sock);
         }
 
         // Wait until every daemon socket is up and its fabric handshake is ready.
         let deadline = Instant::now() + Duration::from_secs(10);
-        for sock in &sockets {
+        for sock in &cluster.sockets {
             loop {
                 if let Ok(ctx) = Context::open(sock)
                     && let Ok(stats) = ctx.stats()
@@ -73,11 +114,7 @@ impl TestCluster {
             }
         }
 
-        Self {
-            dir,
-            children,
-            sockets,
-        }
+        cluster
     }
 
     fn socket(&self, idx: usize) -> &Path {
@@ -118,6 +155,70 @@ controller_a = "c0"
 controller_b = "c0"
 speed_mbps = 40000
 "#;
+
+#[test]
+fn coordinated_bond_stop_keeps_the_second_peer_alive_until_released() {
+    let cluster_toml = format!(
+        "{TWO_NODE_CFG}\n{}",
+        r#"
+[[links]]
+id = "l1"
+a = 0
+b = 1
+endpoint_a = "e2"
+endpoint_b = "e3"
+controller_a = "c1"
+controller_b = "c1"
+speed_mbps = 40000
+"#
+    );
+    let mut cluster = TestCluster::spawn_inner(&cluster_toml, &[0, 1], true);
+    let config = usb4_rdma_core::config::Cluster::load(&cluster.dir.join("cluster.toml")).unwrap();
+    let frame = |node: u32, verb: u8| {
+        let mut bytes = [0; 52];
+        bytes[0..4].copy_from_slice(b"U4S1");
+        bytes[4] = verb;
+        bytes[8..12].copy_from_slice(&node.to_le_bytes());
+        bytes[12..20].copy_from_slice(&config.epoch.to_le_bytes());
+        bytes[20..].copy_from_slice(&config.digest());
+        bytes
+    };
+    for node in 0..2 {
+        cluster.controls[node]
+            .write_all(&frame(node as u32, 1))
+            .unwrap();
+        let pid = cluster.children[node].id();
+        // SAFETY: the test owns the running child with this PID and has not reaped it.
+        assert_eq!(unsafe { libc::kill(pid as libc::pid_t, libc::SIGTERM) }, 0);
+    }
+    for node in 0..2 {
+        let mut ack = [0; 52];
+        cluster.controls[node].read_exact(&mut ack).unwrap();
+        assert_eq!(ack, frame(node as u32, 2));
+    }
+    for node in 0..2 {
+        cluster.controls[node]
+            .write_all(&frame(node as u32, 3))
+            .unwrap();
+        let deadline = Instant::now() + Duration::from_secs(3);
+        loop {
+            if let Some(status) = cluster.children[node].try_wait().unwrap() {
+                assert!(status.success(), "daemon {node} failed its controlled stop");
+                break;
+            }
+            assert!(
+                Instant::now() < deadline,
+                "daemon {node} remained active after RELEASE"
+            );
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert!(!cluster.socket(node).exists());
+        if node == 0 {
+            assert!(cluster.children[1].try_wait().unwrap().is_none());
+            assert!(cluster.socket(1).exists());
+        }
+    }
+}
 
 const THREE_NODE_CHAIN_CFG: &str = r#"
 epoch = 202

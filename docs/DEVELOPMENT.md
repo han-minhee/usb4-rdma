@@ -32,3 +32,26 @@ records an unready link at the startup deadline, a missed heartbeat deadline,
 a closed stream, or an error while polling that link. The command still
 reports the original error. The local stop flag describes the state when the
 diagnostic is logged and cannot establish which peer began teardown.
+
+## Coordinated stops in paired tests
+
+A paired fixture may start each `serve` with `--shutdown-fd <fd>`, passing
+one end of a private connected Unix stream socketpair. The supervisor retains
+the other end. Finish the workload and close its application clients before
+sending a matching PREPARE and then SIGTERM or SIGINT to each daemon.
+
+The daemon polls the fabric for terminal errors and checks readiness before
+sending PREPARED. It holds its link descriptors while it waits for RELEASE.
+The supervisor sends RELEASE to either peer only after it has received and
+verified both PREPARED frames. Collect both daemon exit codes as well as
+process, socket and device cleanup. A link failure observed before PREPARED,
+a mismatched frame, control EOF, or a timeout yields a nonzero exit.
+`--shutdown-timeout-ms` sets the full local exchange deadline from the stop
+boundary (default 5,000 ms, range 1–30,000 ms). On failed coordination, the
+supervisor still reaps both of its processes and releases its own resources.
+
+This private control stream carries fixed 52-byte messages. Bytes 0–3 are
+ASCII `U4S1`, byte 4 is the operation (1 PREPARE, 2 PREPARED, 3 RELEASE),
+and bytes 5–7 are zero. The next fields are the local node ID (little-endian
+u32), epoch (little-endian u64) and the 32-byte cluster digest used in the
+fabric handshake. Ordinary `serve` keeps its signal-only shutdown behavior.

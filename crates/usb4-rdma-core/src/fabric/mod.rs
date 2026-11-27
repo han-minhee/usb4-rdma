@@ -1118,8 +1118,7 @@ mod tests {
         );
     }
 
-    #[test]
-    fn bond_peer_close_reports_the_local_link_and_stays_terminal() {
+    fn ready_bonded_pair() -> (Cluster, Fabric, Fabric, Instant) {
         let c = bonded_pair_cluster(1000);
         let (a0, b0) = link_pair();
         let (a1, b1) = link_pair();
@@ -1134,6 +1133,12 @@ mod tests {
             }
         }
         assert!(f0.ready() && f1.ready());
+        (c, f0, f1, now)
+    }
+
+    #[test]
+    fn bond_peer_close_reports_the_local_link_and_stays_terminal() {
+        let (_, mut f0, mut f1, now) = ready_bonded_pair();
         assert!(f0.link_failure().is_none());
 
         drop(f1.ports.remove(1));
@@ -1147,6 +1152,43 @@ mod tests {
         assert_eq!(f0.link_failure(), failure);
         assert!(matches!(f0.poll_at(now), Err(Error::Disconnected)));
         assert_eq!(f0.link_failure(), failure);
+    }
+
+    #[test]
+    fn observed_bond_eof_takes_precedence_over_the_stop_barrier() {
+        let (cluster, local, mut peer, _) = ready_bonded_pair();
+        // Closing an actual Unix transport delivers EOF before the local stop boundary.
+        drop(peer.ports.remove(1));
+        let path =
+            std::env::temp_dir().join(format!("u4rd-stop-boundary-{}.sock", std::process::id()));
+        let server = crate::ipc::Server::bind(
+            &path,
+            crate::ipc::Welcome {
+                node: 0,
+                epoch: cluster.epoch,
+                digest: cluster.digest(),
+                client: 0,
+            },
+        )
+        .unwrap();
+        let mut failure = None;
+        let result = crate::Service::with_max_mr_bytes(local, server, cluster.timeout_ms, 1024)
+            .run_with_stop_barrier(
+                0,
+                || true,
+                |error| failure = Some(error),
+                Some(|| panic!("a terminal peer EOF must prevent PREPARED")),
+            );
+        assert!(matches!(result, Err(Error::Disconnected)));
+        assert_eq!(
+            failure,
+            Some(LinkFailure {
+                port: 1,
+                peer: 1,
+                cause: LinkFailureCause::Closed
+            })
+        );
+        assert!(!path.exists());
     }
 
     #[test]

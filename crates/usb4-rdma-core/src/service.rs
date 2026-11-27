@@ -165,10 +165,28 @@ impl Service {
 
     /// Runs the service and reports link-specific evidence on terminal failure when available.
     pub fn run_with_link_failure_report(
+        self,
+        spin_us: u64,
+        stopping: impl Fn() -> bool,
+        report_failure: impl FnOnce(LinkFailure),
+    ) -> Result<()> {
+        self.run_with_stop_barrier(
+            spin_us,
+            stopping,
+            report_failure,
+            None::<fn() -> Result<()>>,
+        )
+    }
+
+    /// Runs the private daemon supervisor's stop barrier with link descriptors still held.
+    /// A terminal error from the final transport poll takes precedence over the barrier.
+    #[doc(hidden)]
+    pub fn run_with_stop_barrier(
         mut self,
         spin_us: u64,
         stopping: impl Fn() -> bool,
         report_failure: impl FnOnce(LinkFailure),
+        stop_barrier: Option<impl FnOnce() -> Result<()>>,
     ) -> Result<()> {
         // SAFETY: PR_SET_TIMERSLACK takes only scalar integer arguments and no pointers.
         unsafe {
@@ -187,6 +205,17 @@ impl Service {
 
         loop {
             if stopping() {
+                if let Some(stop_barrier) = stop_barrier {
+                    let stop = self.tick(Instant::now(), false, 0, false).and_then(|_| {
+                        if !self.fabric.ready() {
+                            return Err(Error::Protocol("shutdown barrier requires ready fabric"));
+                        }
+                        stop_barrier()
+                    });
+                    if let Err(error) = stop {
+                        return self.fail(error, report_failure);
+                    }
+                }
                 for &ci in &self.state.active_clients {
                     if let Some(c) = self.state.clients[ci].as_mut() {
                         c.ipc.fail_all(STATUS_CONNECTION_CLOSED);
@@ -298,20 +327,22 @@ impl Service {
                         force_fd_check = true;
                     }
                 }
-                Err(e) => {
-                    for &ci in &self.state.active_clients {
-                        if let Some(c) = self.state.clients[ci].as_mut() {
-                            c.ipc.fail_all(STATUS_TRANSPORT_ERR);
-                        }
-                    }
-                    let _ = self.fabric.shutdown();
-                    if let Some(failure) = self.fabric.link_failure() {
-                        report_failure(failure);
-                    }
-                    return Err(e);
-                }
+                Err(error) => return self.fail(error, report_failure),
             }
         }
+    }
+
+    fn fail(&mut self, error: Error, report_failure: impl FnOnce(LinkFailure)) -> Result<()> {
+        for &ci in &self.state.active_clients {
+            if let Some(client) = self.state.clients[ci].as_mut() {
+                client.ipc.fail_all(STATUS_TRANSPORT_ERR);
+            }
+        }
+        let _ = self.fabric.shutdown();
+        if let Some(failure) = self.fabric.link_failure() {
+            report_failure(failure);
+        }
+        Err(error)
     }
 
     pub fn tick(

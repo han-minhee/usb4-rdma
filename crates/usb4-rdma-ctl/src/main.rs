@@ -91,6 +91,12 @@ enum Command {
         /// Run each link on a dedicated I/O and CRC32 worker (default true for USB4 and busy-poll).
         #[arg(long, action = clap::ArgAction::Set)]
         threaded: Option<bool>,
+        /// Wait for a coordinated stop on an inherited Unix stream descriptor.
+        #[arg(long, value_parser = clap::value_parser!(i32).range(3..))]
+        shutdown_fd: Option<i32>,
+        /// Time allowed for the entire stop exchange (default 5000 ms).
+        #[arg(long, requires = "shutdown_fd", value_parser = clap::value_parser!(u64).range(1..=30000))]
+        shutdown_timeout_ms: Option<u64>,
     },
     Monitor {
         #[arg(long)]
@@ -175,6 +181,8 @@ fn main() -> anyhow::Result<()> {
             spin_us,
             active_probe_us,
             threaded,
+            shutdown_fd,
+            shutdown_timeout_ms,
         } => {
             let (default_spin_us, default_probe_us) = match backend {
                 Backend::Usb4 => (200, 100),
@@ -187,6 +195,17 @@ fn main() -> anyhow::Result<()> {
                 threaded.unwrap_or(matches!(backend, Backend::Usb4 | Backend::Usb4BusyPoll));
             lifecycle::install()?;
             let c = Cluster::load(&config)?;
+            let stop_barrier = shutdown_fd
+                .map(|fd| {
+                    lifecycle::ShutdownBarrier::from_inherited_fd(
+                        fd,
+                        node,
+                        c.epoch,
+                        c.digest(),
+                        Duration::from_millis(shutdown_timeout_ms.unwrap_or(5_000)),
+                    )
+                })
+                .transpose()?;
             let mut links = open_links(&c, node, backend, emulated_dir.as_deref(), sqpoll)?;
             if threaded {
                 links = links
@@ -223,24 +242,34 @@ fn main() -> anyhow::Result<()> {
                 c.epoch,
                 c.queue_depth
             );
-            Service::with_max_mr_bytes(fabric, server, c.timeout_ms, max_mr_bytes)
-                .run_with_link_failure_report(spin_us, lifecycle::stopping, |failure| {
-                    // open_links supplies the backends in local configuration order.
-                    let link = c
-                        .links
-                        .iter()
-                        .filter(|link| link.a == node || link.b == node)
-                        .nth(failure.port)
-                        .map_or("<unknown>", |link| link.id.as_str());
-                    eprintln!(
-                        "usb4-rdma link failure node={node} epoch={} port={} peer={} link={link:?} cause={} local_stop_requested={}",
-                        c.epoch,
-                        failure.port,
-                        failure.peer,
-                        failure.cause,
-                        lifecycle::stopping()
-                    );
-                })?;
+            let service = Service::with_max_mr_bytes(fabric, server, c.timeout_ms, max_mr_bytes);
+            let report = |failure: usb4_rdma_core::LinkFailure| {
+                // open_links supplies the backends in local configuration order.
+                let link = c
+                    .links
+                    .iter()
+                    .filter(|link| link.a == node || link.b == node)
+                    .nth(failure.port)
+                    .map_or("<unknown>", |link| link.id.as_str());
+                eprintln!(
+                    "usb4-rdma link failure node={node} epoch={} port={} peer={} link={link:?} cause={} local_stop_requested={}",
+                    c.epoch,
+                    failure.port,
+                    failure.peer,
+                    failure.cause,
+                    lifecycle::stopping()
+                );
+            };
+            if let Some(barrier) = stop_barrier {
+                service.run_with_stop_barrier(
+                    spin_us,
+                    lifecycle::stopping,
+                    report,
+                    Some(|| barrier.wait().map_err(Into::into)),
+                )?;
+            } else {
+                service.run_with_link_failure_report(spin_us, lifecycle::stopping, report)?;
+            }
         }
         Command::Monitor { socket, links } => {
             let mut c = usb4_rdma_core::ipc::Client::connect(&socket)?;
