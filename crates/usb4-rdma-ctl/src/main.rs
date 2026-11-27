@@ -2,6 +2,7 @@ mod bench;
 mod lifecycle;
 mod raw;
 
+use anyhow::Context;
 use clap::{Parser, Subcommand, ValueEnum};
 use std::{
     path::{Path, PathBuf},
@@ -410,10 +411,11 @@ fn open_links(
             if matches!(backend, Backend::Uring) {
                 #[cfg(feature = "uring")]
                 {
-                    out.push(Box::new(
-                        usb4_stream_hal::uring::UringLink::open(&device, caps, sqpoll)?
-                            .with_receive_capacity(c.queue_depth * 2 + 8),
-                    ));
+                    let link = usb4_stream_hal::uring::UringLink::open(&device, caps, sqpoll)
+                        .with_context(|| {
+                            format!("open USB4STREAM device {} with io_uring", device.display())
+                        })?;
+                    out.push(Box::new(link.with_receive_capacity(c.queue_depth * 2 + 8)));
                 }
                 #[cfg(not(feature = "uring"))]
                 {
@@ -421,10 +423,12 @@ fn open_links(
                 }
             } else {
                 let link = if matches!(backend, Backend::Usb4BusyPoll) {
-                    let file = usb4_stream_hal::stream::open_device(&device)?;
+                    let file = usb4_stream_hal::stream::open_device(&device)
+                        .with_context(|| format!("open USB4STREAM device {}", device.display()))?;
                     StreamLink::new(Box::new(file), caps)
                 } else {
-                    let file = usb4_stream_hal::stream::ReadyFile::open(&device)?;
+                    let file = usb4_stream_hal::stream::ReadyFile::open(&device)
+                        .with_context(|| format!("open USB4STREAM device {}", device.display()))?;
                     let fd = file.as_raw_fd();
                     StreamLink::new(Box::new(file), caps).with_raw_fd(fd)
                 };
@@ -439,22 +443,26 @@ fn open_links(
 }
 
 fn native_device(endpoint: &Path, dev: &Path, backend: Backend) -> anyhow::Result<PathBuf> {
+    let metadata = endpoint
+        .metadata()
+        .with_context(|| format!("inspect USB4STREAM endpoint {}", endpoint.display()))?;
     anyhow::ensure!(
-        endpoint.is_dir(),
-        "native USB4 backends require a ConfigFS endpoint path for profile readback"
+        metadata.is_dir(),
+        "native USB4 backends require a ConfigFS endpoint directory for profile readback: {}",
+        endpoint.display()
     );
     if matches!(backend, Backend::Uring) {
-        let throttling = std::fs::read_to_string(endpoint.join("throttling"))?;
+        let path = endpoint.join("throttling");
+        let throttling = std::fs::read_to_string(&path)
+            .with_context(|| format!("read USB4STREAM moderation from {}", path.display()))?;
         anyhow::ensure!(
             throttling.trim() == "0",
-            "io_uring backend requires zero ConfigFS moderation"
+            "io_uring backend requires zero ConfigFS moderation at {}",
+            path.display()
         );
     }
-    Ok(configfs::map_device_with_busy_poll(
-        endpoint,
-        dev,
-        matches!(backend, Backend::Usb4BusyPoll),
-    )?)
+    configfs::map_device_with_busy_poll(endpoint, dev, matches!(backend, Backend::Usb4BusyPoll))
+        .with_context(|| format!("resolve the USB4STREAM device for {}", endpoint.display()))
 }
 
 #[cfg(test)]
