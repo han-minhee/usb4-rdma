@@ -24,6 +24,7 @@ struct Cli {
 
 #[derive(Clone, Copy, ValueEnum)]
 enum Backend {
+    Usb4,
     Usb4BusyPoll,
     Emulated,
     EmulatedUring,
@@ -81,13 +82,13 @@ enum Command {
         max_mr_bytes: usize,
         #[arg(long)]
         sqpoll: bool,
-        /// Spin after progress in microseconds (busy-poll default 500, otherwise 0).
+        /// Spin after progress in microseconds (USB4 default 200, busy-poll 500, otherwise 0).
         #[arg(long, value_parser = clap::value_parser!(u64).range(0..=10000))]
         spin_us: Option<u64>,
-        /// Active probe interval in microseconds (busy-poll default 50, otherwise 1000).
+        /// Active probe interval in microseconds (USB4 default 100, busy-poll 50, otherwise 1000).
         #[arg(long, value_parser = clap::value_parser!(u64).range(50..=1000))]
         active_probe_us: Option<u64>,
-        /// Run each link backend on a dedicated I/O and CRC32 worker thread (default true for busy-poll).
+        /// Run each link on a dedicated I/O and CRC32 worker (default true for USB4 and busy-poll).
         #[arg(long, action = clap::ArgAction::Set)]
         threaded: Option<bool>,
     },
@@ -176,12 +177,14 @@ fn main() -> anyhow::Result<()> {
             threaded,
         } => {
             let (default_spin_us, default_probe_us) = match backend {
+                Backend::Usb4 => (200, 100),
                 Backend::Usb4BusyPoll => (500, 50),
                 _ => (0, 1000),
             };
             let spin_us = spin_us.unwrap_or(default_spin_us);
             let active_probe_us = active_probe_us.unwrap_or(default_probe_us);
-            let threaded = threaded.unwrap_or(matches!(backend, Backend::Usb4BusyPoll));
+            let threaded =
+                threaded.unwrap_or(matches!(backend, Backend::Usb4 | Backend::Usb4BusyPoll));
             lifecycle::install()?;
             let c = Cluster::load(&config)?;
             let mut links = open_links(&c, node, backend, emulated_dir.as_deref(), sqpoll)?;
@@ -211,6 +214,7 @@ fn main() -> anyhow::Result<()> {
                 "usb4-rdma node {node} IPC={} backend={} epoch={} queue_depth={} spin_us={spin_us} active_probe_us={active_probe_us}",
                 socket.display(),
                 match backend {
+                    Backend::Usb4 => "usb4",
                     Backend::Usb4BusyPoll => "usb4-busy-poll",
                     Backend::Emulated => "emulated (software only)",
                     Backend::Uring => "uring",
@@ -402,21 +406,7 @@ fn open_links(
                 ));
             }
         } else {
-            let endpoint = Path::new(endpoint);
-            let busy_poll = matches!(backend, Backend::Usb4BusyPoll);
-            anyhow::ensure!(
-                endpoint.is_dir(),
-                "native USB4 backends require a ConfigFS endpoint path for profile readback"
-            );
-            if matches!(backend, Backend::Uring) {
-                let throttling = std::fs::read_to_string(endpoint.join("throttling"))?;
-                anyhow::ensure!(
-                    throttling.trim() == "0",
-                    "io_uring backend requires zero ConfigFS moderation"
-                );
-            }
-            let device =
-                configfs::map_device_with_busy_poll(endpoint, Path::new("/dev"), busy_poll)?;
+            let device = native_device(Path::new(endpoint), Path::new("/dev"), backend)?;
             if matches!(backend, Backend::Uring) {
                 #[cfg(feature = "uring")]
                 {
@@ -430,8 +420,14 @@ fn open_links(
                     anyhow::bail!("uring backend requires the uring feature");
                 }
             } else {
-                let file = usb4_stream_hal::stream::open_device(&device)?;
-                let link = StreamLink::new(Box::new(file), caps);
+                let link = if matches!(backend, Backend::Usb4BusyPoll) {
+                    let file = usb4_stream_hal::stream::open_device(&device)?;
+                    StreamLink::new(Box::new(file), caps)
+                } else {
+                    let file = usb4_stream_hal::stream::ReadyFile::open(&device)?;
+                    let fd = file.as_raw_fd();
+                    StreamLink::new(Box::new(file), caps).with_raw_fd(fd)
+                };
                 out.push(Box::new(
                     link.with_tx_capacity(64)
                         .with_receive_capacity(c.queue_depth * 2 + 8),
@@ -440,4 +436,108 @@ fn open_links(
         }
     }
     Ok(out)
+}
+
+fn native_device(endpoint: &Path, dev: &Path, backend: Backend) -> anyhow::Result<PathBuf> {
+    anyhow::ensure!(
+        endpoint.is_dir(),
+        "native USB4 backends require a ConfigFS endpoint path for profile readback"
+    );
+    if matches!(backend, Backend::Uring) {
+        let throttling = std::fs::read_to_string(endpoint.join("throttling"))?;
+        anyhow::ensure!(
+            throttling.trim() == "0",
+            "io_uring backend requires zero ConfigFS moderation"
+        );
+    }
+    Ok(configfs::map_device_with_busy_poll(
+        endpoint,
+        dev,
+        matches!(backend, Backend::Usb4BusyPoll),
+    )?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{
+        fs,
+        time::{SystemTime, UNIX_EPOCH},
+    };
+
+    #[test]
+    fn serve_accepts_explicit_readiness_backend_and_keeps_uring_default() {
+        let args = [
+            "usb4-rdma-ctl",
+            "serve",
+            "--config",
+            "fabric.toml",
+            "--node",
+            "0",
+            "--socket",
+            "node.sock",
+        ];
+        assert!(matches!(
+            Cli::try_parse_from(args).unwrap().command,
+            Command::Serve {
+                backend: Backend::Uring,
+                ..
+            }
+        ));
+        assert!(matches!(
+            Cli::try_parse_from(args.into_iter().chain(["--backend", "usb4"]))
+                .unwrap()
+                .command,
+            Command::Serve {
+                backend: Backend::Usb4,
+                ..
+            }
+        ));
+    }
+
+    #[test]
+    fn native_backends_require_matching_configfs_profiles() {
+        struct Fixture(PathBuf);
+        impl Drop for Fixture {
+            fn drop(&mut self) {
+                let _ = fs::remove_dir_all(&self.0);
+            }
+        }
+
+        let endpoint = std::env::temp_dir().join(format!(
+            "usb4-ctl-profile-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir(&endpoint).unwrap();
+        let fixture = Fixture(endpoint);
+        let endpoint = &fixture.0;
+        let dev = endpoint.join("dev");
+        let device = dev.join("tbstream7");
+        let map = |backend| native_device(endpoint, &dev, backend);
+        let busy_poll = endpoint.join("busy_poll");
+        let throttling = endpoint.join("throttling");
+        fs::write(endpoint.join("index"), "7\n").unwrap();
+        fs::write(&busy_poll, "0\n").unwrap();
+        fs::write(&throttling, "8192\n").unwrap();
+
+        assert_eq!(map(Backend::Usb4).unwrap(), device);
+        assert!(map(Backend::Usb4BusyPoll).is_err());
+        assert!(map(Backend::Uring).is_err());
+        assert!(native_device(&device, &dev, Backend::Usb4).is_err());
+
+        fs::write(&busy_poll, "1\n").unwrap();
+        fs::write(&throttling, "0\n").unwrap();
+        assert!(map(Backend::Usb4).is_err());
+        assert_eq!(map(Backend::Usb4BusyPoll).unwrap(), device);
+        assert!(map(Backend::Uring).is_err());
+
+        fs::remove_file(busy_poll).unwrap();
+        assert_eq!(map(Backend::Usb4).unwrap(), device);
+        assert!(map(Backend::Usb4BusyPoll).is_err());
+        assert_eq!(map(Backend::Uring).unwrap(), device);
+    }
 }

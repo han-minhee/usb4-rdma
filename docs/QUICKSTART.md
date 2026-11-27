@@ -66,6 +66,10 @@ usb4-rdma-ctl serve --config cluster.toml --node "$NODE_ID" \
 Use `NODE_ID=0` on host A and `NODE_ID=1` on host B. In a second shell,
 check each daemon and its per-cable counters.
 
+For an existing readiness-driven endpoint with kernel busy polling off,
+use `--backend usb4` to retain its ConfigFS moderation. The default
+`uring` backend requires zero moderation.
+
 ~~~sh
 usb4-rdma-ctl monitor --socket "$USB4_RDMA_SOCKET" --links
 ~~~
