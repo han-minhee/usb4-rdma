@@ -5,7 +5,8 @@ use anyhow::{Context as _, Result, ensure};
 use clap::{Subcommand, ValueEnum};
 use proto::{ControlReq, ControlResp, recv_json, send_json};
 use stats::{
-    AllReduceResult, BandwidthResult, BenchReport, LatencyResult, print_report, summarize_latency,
+    AllReduceResult, BandwidthResult, BenchReport, DuplexTiming, LatencyResult, print_report,
+    summarize_latency,
 };
 use std::{
     io::{BufReader, Read, Write},
@@ -416,6 +417,7 @@ fn handle_client(
                 size,
                 iters,
                 peer_rkey,
+                report_transfer_completion,
             } => {
                 let r = rdma_state
                     .as_mut()
@@ -440,13 +442,18 @@ fn handle_client(
                     matches!(recv_json(&mut reader)?, ControlReq::RdmaDuplexFinish),
                     "expected RDMA duplex finish"
                 );
+                let bytes = (size as u64) * (iters as u64);
+                if report_transfer_completion {
+                    send_json(&mut writer, &ControlResp::RdmaDuplexTransferred { bytes })?;
+                    continue;
+                }
                 let mut dst = vec![0u8; size];
                 r.mr.read_bytes(size, &mut dst)?;
                 send_json(
                     &mut writer,
                     &ControlResp::Done {
                         crc32: crc32fast::hash(&dst),
-                        bytes: (size as u64) * (iters as u64),
+                        bytes,
                     },
                 )?;
             }
@@ -877,6 +884,7 @@ fn run_client(
                     gib_per_sec: (total_bytes as f64) / elapsed / (1024.0 * 1024.0 * 1024.0),
                     gbits_per_sec: (total_bytes as f64) * 8.0 / elapsed / 1e9,
                     verified_crc32,
+                    duplex_timing: None,
                     rdma_tx_bytes_delta: 0,
                     rdma_rx_bytes_delta: 0,
                 });
@@ -916,6 +924,7 @@ fn run_client(
                     gib_per_sec: (duplex_bytes as f64) / elapsed / (1024.0 * 1024.0 * 1024.0),
                     gbits_per_sec: (duplex_bytes as f64) * 8.0 / elapsed / 1e9,
                     verified_crc32: crc32fast::hash(&recv_buf),
+                    duplex_timing: None,
                     rdma_tx_bytes_delta: 0,
                     rdma_rx_bytes_delta: 0,
                 });
@@ -960,6 +969,7 @@ fn run_client(
                     gib_per_sec: (total_bytes as f64) / elapsed / (1024.0 * 1024.0 * 1024.0),
                     gbits_per_sec: (total_bytes as f64) * 8.0 / elapsed / 1e9,
                     verified_crc32,
+                    duplex_timing: None,
                     rdma_tx_bytes_delta: tx1 - tx0,
                     rdma_rx_bytes_delta: rx1 - rx0,
                 });
@@ -993,6 +1003,7 @@ fn run_client(
                     gib_per_sec: (total_bytes as f64) / elapsed / (1024.0 * 1024.0 * 1024.0),
                     gbits_per_sec: (total_bytes as f64) * 8.0 / elapsed / 1e9,
                     verified_crc32,
+                    duplex_timing: None,
                     rdma_tx_bytes_delta: tx1 - tx0,
                     rdma_rx_bytes_delta: rx1 - rx0,
                 });
@@ -1005,6 +1016,7 @@ fn run_client(
                             size,
                             iters,
                             peer_rkey: r.mr.rkey(),
+                            report_transfer_completion: true,
                         },
                     )?;
                     ensure!(matches!(recv_json(&mut reader)?, ControlResp::Ready));
@@ -1017,12 +1029,25 @@ fn run_client(
                         poll_exact(&r.cq, wr)?;
                     }
                     send_json(&mut writer, &ControlReq::RdmaDuplexFinish)?;
-                    let done_resp: ControlResp = recv_json(&mut reader)?;
+                    let completion: ControlResp = recv_json(&mut reader)?;
                     let elapsed = t0.elapsed().as_secs_f64();
                     let (tx1, rx1) = rdma_stats(Some(r))?;
-                    let (server_crc, server_bytes) = match done_resp {
-                        ControlResp::Done { crc32, bytes } => (crc32, bytes),
-                        other => anyhow::bail!("expected Done, got {other:?}"),
+                    let (server_crc, server_bytes, duplex_timing) = match completion {
+                        ControlResp::RdmaDuplexTransferred { bytes } => {
+                            send_json(
+                                &mut writer,
+                                &ControlReq::RdmaVerifyCrc { offset: size, size },
+                            )?;
+                            let crc32 = match recv_json(&mut reader)? {
+                                ControlResp::Done { crc32, bytes } if bytes == size as u64 => crc32,
+                                other => anyhow::bail!("expected duplex CRC result, got {other:?}"),
+                            };
+                            (crc32, bytes, DuplexTiming::TransferCompletion)
+                        }
+                        ControlResp::Done { crc32, bytes } => {
+                            (crc32, bytes, DuplexTiming::TransferAndRemoteCrc)
+                        }
+                        other => anyhow::bail!("expected duplex completion, got {other:?}"),
                     };
                     ensure!(
                         server_crc == expected_crc,
@@ -1055,6 +1080,7 @@ fn run_client(
                         gib_per_sec: (duplex_bytes as f64) / elapsed / (1024.0 * 1024.0 * 1024.0),
                         gbits_per_sec: (duplex_bytes as f64) * 8.0 / elapsed / 1e9,
                         verified_crc32: server_crc,
+                        duplex_timing: Some(duplex_timing),
                         rdma_tx_bytes_delta: tx1 - tx0,
                         rdma_rx_bytes_delta: rx1 - rx0,
                     });

@@ -18,6 +18,14 @@ integrity with CRC32.
 3. **2-Node Host `f32` SUM AllReduce (`--suite allreduce`)**:
    - Compares `RDMA_WRITE_WITH_IMM` exchange + vector reduction against TCP exchange + vector reduction with exact element-wise verification.
 
+With current clients and responders, RDMA duplex bandwidth times the two
+write loops through the control acknowledgement that both peers finished.
+The initiator requests the remote CRC after stopping the clock. A result
+still requires both CRC checks and exact payload counters. The JSON field
+`duplex_timing` records `transfer_completion`. With an older responder,
+`transfer_and_remote_crc` identifies results that include the peer's CRC
+verification time.
+
 ## Two-Host Linux Execution
 
 1. **Preflight (read-only):**

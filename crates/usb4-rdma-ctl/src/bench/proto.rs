@@ -41,6 +41,8 @@ pub enum ControlReq {
         size: usize,
         iters: usize,
         peer_rkey: u64,
+        #[serde(default)]
+        report_transfer_completion: bool,
     },
     RdmaDuplexStart,
     RdmaDuplexFinish,
@@ -69,6 +71,9 @@ pub enum ControlResp {
         data_port: u16,
     },
     Ready,
+    RdmaDuplexTransferred {
+        bytes: u64,
+    },
     Done {
         crc32: u32,
         bytes: u64,
@@ -93,4 +98,24 @@ pub fn recv_json<T: for<'de> Deserialize<'de>>(
     let n = reader.read_line(&mut line)?;
     anyhow::ensure!(n > 0, "control connection closed");
     Ok(serde_json::from_str(&line)?)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ControlReq;
+
+    #[test]
+    fn legacy_duplex_request_keeps_the_combined_reply() {
+        let request: ControlReq = serde_json::from_str(
+            r#"{"type":"RdmaDuplexWrite","size":4096,"iters":8,"peer_rkey":42}"#,
+        )
+        .unwrap();
+        assert!(matches!(
+            request,
+            ControlReq::RdmaDuplexWrite {
+                report_transfer_completion: false,
+                ..
+            }
+        ));
+    }
 }

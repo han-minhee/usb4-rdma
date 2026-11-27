@@ -166,6 +166,7 @@ speed_mbps = 40000
         .find(|row| row["op"] == "rdma_duplex")
         .unwrap();
     assert_eq!(duplex["total_bytes"], 1_048_576);
+    assert_eq!(duplex["duplex_timing"], "transfer_completion");
     assert_eq!(duplex["rdma_tx_bytes_delta"], 524_288);
     assert_eq!(duplex["rdma_rx_bytes_delta"], 524_288);
     assert_eq!(report["allreduce"].as_array().unwrap().len(), 2);

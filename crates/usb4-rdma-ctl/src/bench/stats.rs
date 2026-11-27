@@ -1,5 +1,12 @@
 use serde::Serialize;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum DuplexTiming {
+    TransferCompletion,
+    TransferAndRemoteCrc,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct LatencyResult {
     pub transport: String,
@@ -27,6 +34,8 @@ pub struct BandwidthResult {
     pub gib_per_sec: f64,
     pub gbits_per_sec: f64,
     pub verified_crc32: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duplex_timing: Option<DuplexTiming>,
     pub rdma_tx_bytes_delta: u64,
     pub rdma_rx_bytes_delta: u64,
 }
@@ -107,6 +116,13 @@ pub fn print_report(report: &BenchReport) {
                 r.gbits_per_sec,
                 r.rdma_tx_bytes_delta + r.rdma_rx_bytes_delta
             );
+        }
+        if report
+            .bandwidth
+            .iter()
+            .any(|row| row.duplex_timing == Some(DuplexTiming::TransferAndRemoteCrc))
+        {
+            println!("RDMA duplex timing includes remote CRC verification with this peer.");
         }
     }
 
