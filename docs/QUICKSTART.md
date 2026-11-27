@@ -73,6 +73,14 @@ usb4-rdma-ctl monitor --socket "$USB4_RDMA_SOCKET" --links
 Start clients when both peers report `fabric_ready: true` and the same epoch. Batch transfers can use both cables. Small messages may use a single
 cable chosen by the scheduler.
 
+For a containerized daemon, provision endpoints on the host. Give the daemon
+read access to the selected ConfigFS endpoints and read-write access to their
+corresponding character devices. Share the private Unix socket directory with
+clients running under the daemon's UID. Check the container security policy
+for device and socket access. The `uring` backend also needs
+`io_uring_setup`, `io_uring_enter`, and `io_uring_register` in the daemon's
+seccomp allowlist when that filter is enabled.
+
 ## Diagnose a connection
 
 - If doctor shows no stream-service ID, verify the kernel configuration and
