@@ -6,6 +6,7 @@ use std::{
     path::Path,
     ptr,
     sync::{Arc, Condvar, Mutex},
+    thread,
     time::Duration,
 };
 use usb4_rdma_core::{
@@ -17,6 +18,7 @@ pub const USB4_RPC_HANDLE_BYTES: usize = 20;
 const _: () = assert!(USB4_RPC_HANDLE_BYTES == EndpointHandle::SIZE);
 const WINDOW: usize = usb4_rdma_core::ipc::WINDOW;
 const TIMEOUT: Duration = Duration::from_secs(30);
+const IDLE_POLL: Duration = Duration::from_micros(200);
 const STREAM_TAG: u64 = 1;
 
 pub struct Usb4RpcListener {
@@ -94,6 +96,15 @@ impl Stream {
             self.rx_mr.read_bytes(self.consumed, &mut data[..take])?;
             self.consumed += take;
             data = &mut data[take..];
+        }
+        Ok(())
+    }
+
+    fn wait_for_input(&self) -> Result<()> {
+        if self.received == self.consumed {
+            while !self.qp.peek_recv(STREAM_TAG)? {
+                thread::sleep(IDLE_POLL);
+            }
         }
         Ok(())
     }
@@ -329,6 +340,30 @@ pub unsafe extern "C" fn usb4_rpc_recv_exact(
     data: *mut u8,
     len: usize,
 ) -> bool {
+    // SAFETY: this entry point has the same handle and buffer contract as receive_raw.
+    unsafe { receive_raw(txn, data, len, false) }
+}
+
+/// Wait for the first byte of a new request while the peer remains connected.
+/// Subsequent reads still use the regular receive deadline.
+///
+/// # Safety
+/// `txn` is live. `data` points to one exclusively writable byte.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn usb4_rpc_recv_after_idle(
+    txn: *const Usb4RpcTransaction,
+    data: *mut u8,
+) -> bool {
+    // SAFETY: the caller provides one writable byte and a live transaction.
+    unsafe { receive_raw(txn, data, 1, true) }
+}
+
+unsafe fn receive_raw(
+    txn: *const Usb4RpcTransaction,
+    data: *mut u8,
+    len: usize,
+    allow_idle: bool,
+) -> bool {
     guard(false, || {
         // SAFETY: a non-null transaction handle is live for this call.
         let txn = unsafe { txn.as_ref() }.ok_or(Error::Stale)?;
@@ -340,6 +375,9 @@ pub unsafe extern "C" fn usb4_rpc_recv_exact(
         }
         txn.use_stream(|stream| {
             stream.submit()?;
+            if allow_idle {
+                stream.wait_for_input()?;
+            }
             // SAFETY: the caller retains exclusive access over this writable range.
             stream.receive(unsafe { std::slice::from_raw_parts_mut(data, len) })
         })?;

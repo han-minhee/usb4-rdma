@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <thread>
@@ -45,6 +46,7 @@ int main(int argc, char **argv) {
     ggml_backend_tensor_get(right, out.data(), 0, out.size() * sizeof(float));
     assert(out == y);
 
+    std::this_thread::sleep_for(std::chrono::seconds(35));
     std::array<float, 32> small_x, small_y, small_result;
     small_x.fill(11.0f);
     small_y.fill(42.0f);
@@ -58,5 +60,5 @@ int main(int argc, char **argv) {
     ggml_backend_buffer_free(buffer);
     ggml_free(ctx);
     ggml_backend_free(backend);
-    std::puts("ggml-rpc concurrent tensor load and small graph passed");
+    std::puts("ggml-rpc concurrent tensor load and graph after 35 seconds idle passed");
 }

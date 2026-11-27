@@ -18,6 +18,8 @@ def main():
     args = parser.parse_args()
     base = args.tree / "ggml/src/ggml-rpc"
     source = base / "transport.cpp"
+    header = base / "transport.h"
+    rpc = base / "ggml-rpc.cpp"
     build = base / "CMakeLists.txt"
     repository = Path(__file__).resolve().parents[2]
     transport = source.read_text()
@@ -35,6 +37,17 @@ def main():
         transport = replace_once(transport, start, start + f"\n    if (usb4) {{\n        return {operation};\n    }}")
     transport = replace_once(transport, 'return pimpl->use_rdma ? "RDMA" : "TCP";',
                              'return pimpl->usb4 ? "USB4STREAM" : (pimpl->use_rdma ? "RDMA" : "TCP");')
+    declaration = "    bool recv_data(void * data, size_t size);"
+    interface = replace_once(header.read_text(), declaration,
+                             declaration + "\n    bool recv_command(uint8_t & command);")
+    transport = replace_once(transport, "bool socket_t::flush() {", """bool socket_t::recv_command(uint8_t & command) {
+    return pimpl->usb4 ? pimpl->usb4->receive_after_idle(&command) : recv_data(&command, 1);
+}
+
+bool socket_t::flush() {""")
+    # HELLO and payload reads remain subject to the normal transport deadline.
+    server = replace_once(rpc.read_text(), "    while (true) {\n        if (!sock->recv_data(&cmd, 1)) {",
+                           "    while (true) {\n        if (!sock->recv_command(cmd)) {")
     for factory, fd, responder in (("accept()", "client_socket_fd", "true"), ("connect(const char * host, int port)", "sockfd", "false")):
         start = transport.index(f"socket_ptr socket_t::{factory} {{")
         end = transport.index("\n}\n", start)
@@ -56,6 +69,8 @@ target_link_libraries(ggml-rpc PRIVATE ${USB4_RPC_LIBRARY})
     shutil.copyfile(Path(__file__).with_name("usb4_socket.hpp"), base / "usb4_socket.hpp")
     shutil.copyfile(repository / "include/usb4_rpc.h", base / "usb4_rpc.h")
     source.write_text(transport)
+    header.write_text(interface)
+    rpc.write_text(server)
     build.write_text(cmake)
 
 

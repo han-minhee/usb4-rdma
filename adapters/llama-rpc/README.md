@@ -15,4 +15,4 @@ Set `GGML_RPC_USB4=1`, `USB4_RDMA_SOCKET`, and `LD_LIBRARY_PATH` on both hosts. 
 
 Verify `USB4STREAM` selection in the transport log, load concurrent tensor ranges, and check payload-byte deltas on both nodes with `usb4-rdma-ctl monitor --links`. The same adapter can be exercised on two `--backend emulated` nodes for software verification.
 
-Run the CPU fixture with `sh adapters/llama-rpc/test.sh /path/to/llama.cpp /path/to/build`. It uploads two tensors concurrently, reads them back, executes a small graph, and verifies peer payload counters.
+Run the CPU fixture with `sh adapters/llama-rpc/test.sh /path/to/llama.cpp /path/to/build`. It uploads two tensors concurrently, reads them back, waits 35 seconds, executes a small graph, and verifies peer payload counters. The worker waits for a new command while the peer remains connected. The initial HELLO and each payload read retain the normal timeout.
