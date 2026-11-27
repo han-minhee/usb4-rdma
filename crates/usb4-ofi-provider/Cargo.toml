@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+readme.workspace = true
 description = "Host-memory libfabric OFI engine for Open MPI over usb4-rdma"
 
 [lib]
@@ -21,6 +22,9 @@ native = ["dep:usb4-rdma-core", "dep:libc"]
 [build-dependencies]
 cc = "1"
 pkg-config = "0.3"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
 
 [lints]
 workspace = true

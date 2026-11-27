@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+readme.workspace = true
 description = "NCCL/RCCL v12 network plugin adapter for usb4-rdma"
 
 [lib]
@@ -23,6 +24,9 @@ libc.workspace = true
 
 [build-dependencies]
 cc = "1"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
 
 [lints]
 workspace = true

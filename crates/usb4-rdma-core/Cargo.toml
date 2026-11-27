@@ -5,6 +5,7 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
+readme.workspace = true
 description = "Core protocol framing, RDMA verbs state, and reassembly primitives for usb4-rdma"
 
 [dependencies]
@@ -17,6 +18,9 @@ sha2.workspace = true
 
 [dev-dependencies]
 loom = "0.7"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
 
 [lints]
 workspace = true

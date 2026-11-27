@@ -1,6 +1,42 @@
-# Linux release
+# Release
 
-Build at a clean Git revision on x86-64 Linux using the [development prerequisites](DEVELOPMENT.md). The current bundle contains `usb4-rdma-ctl`, the OFI and ggml-rpc libraries, the RPC C header, and independent CUDA and ROCm builds of the network plugin. Install matching libfabric before loading the OFI provider.
+## Rust crates
+
+Release `0.1.0` uses wire protocol and daemon IPC version 2. [Crate list and setup](../crates/README.md)
+
+Run these checks from a clean commit on Linux with the pinned Rust toolchain.
+[Development prerequisites](DEVELOPMENT.md)
+
+```sh
+sh scripts/check.sh
+cargo package --workspace --locked --all-features
+cargo publish --dry-run --workspace --locked --all-features
+```
+
+Check the nine archives in `target/package` for the README and MIT license.
+`usb4-llama-rpc` also needs `include/usb4_rpc.h`.
+
+Run `cargo login`, then publish in dependency order.
+
+```sh
+cargo publish --workspace --locked --all-features
+```
+
+If publishing stops, check the index and retry with `--exclude <crate>` for
+each published `0.1.0` crate. Then verify a clean install.
+
+```sh
+install_dir=$(mktemp -d)
+cargo install usb4-rdma-ctl --version 0.1.0 --locked --root "$install_dir"
+"$install_dir/bin/usb4-rdma-ctl" --version
+```
+
+## Linux bundle
+
+Build from a clean commit on x86-64 Linux. The bundle contains `usb4-rdma-ctl`,
+the OFI and ggml-rpc libraries, the RPC C header, and separate CUDA and ROCm
+builds of the net plugin. Install matching libfabric before loading OFI.
+[Development prerequisites](DEVELOPMENT.md)
 
 ```sh
 sh scripts/check.sh
@@ -13,4 +49,5 @@ sha256sum -c SHA256SUMS
 cat SOURCE_REVISION
 ```
 
-Deploy the same source and protocol version to every participant in a fabric. Use a fresh epoch and task-owned endpoints for qualification. The [qualification record](QUALIFICATION.md) identifies the versions and device profiles in the historical measurements.
+Use the same source and protocol version on every host. For qualification,
+use a fresh epoch and task-owned endpoints. [Tested versions and device profiles](QUALIFICATION.md)

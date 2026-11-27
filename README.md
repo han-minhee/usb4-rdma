@@ -45,6 +45,8 @@ then use the [Open MPI guide](docs/MPI.md) or the [ROCm and inference guide](doc
 | ggml-rpc | Transactional C byte stream. See [llama.cpp integration](adapters/llama-rpc/README.md). |
 | Transport | Linux USB4STREAM, direct cables, and bonded links. The daemon stages data through host memory. |
 
+[Rust crate guide](crates/README.md)
+
 The [roadmap](docs/ROADMAP.md) tracks verbs, MPI one-sided windows, UCX, GPU-aware
 MPI, and direct GPU DMA.
 
