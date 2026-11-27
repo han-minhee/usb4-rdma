@@ -1,48 +1,20 @@
-# Development Contract
+# Development
 
-## Toolchain & Checks
-
-- Rust edition `2024`, MSRV `1.99` (`Cargo.toml`).
-- Build and test on Linux with a C11 compiler.
-- Workspace lints deny `unsafe_op_in_unsafe_fn` and `clippy::undocumented_unsafe_blocks`.
-- Run the full local check script:
+Use Linux with Rust 1.100, a C11 compiler, Python 3, libfabric 2.7.0 development headers, and cbindgen 0.29.2 for the complete check. The default Rust workspace tests require neither vendor GPU SDKs nor attached USB4 hardware. The OFI `native` feature builds the actual libfabric provider.
 
 ```sh
+cargo check --locked --workspace
+cargo test --locked --workspace
 sh scripts/check.sh
 ```
 
-Or run individual checks:
+Configure `PKG_CONFIG_PATH` and `LD_LIBRARY_PATH` for a user-installed libfabric as shown in the [MPI guide](MPI.md). The check script exercises host transfers through the loaded OFI and net v12 plugins. For the four-rank test, build the release daemon and run `make -C adapters/ofi` followed by `sh adapters/ofi/test.sh`. See the [llama.cpp adapter](../adapters/llama-rpc/README.md) for the upstream ggml-rpc CPU fixture.
 
-```sh
-cargo fmt --all -- --check
-cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
-cargo test --locked --workspace --all-features
-cargo build --locked --release --workspace --all-features
-U4RD_PROFILE=release sh scripts/test-c-api.sh
-```
+## Native profiles
 
-Install the pinned runtime from the [MPI guide](MPI.md). The OFI test runs
-four Open MPI ranks across two emulated nodes.
+- `uring` uses ConfigFS endpoints with `busy_poll=0` or the attribute absent, and `throttling=0`. SQPOLL is opt-in.
+- `usb4-busy-poll` uses ConfigFS `busy_poll=1` and per-link workers. Defaults are a 500 µs post-progress spin budget and 50 µs recent-transfer polling interval.
+- Both profiles require `CONFIG_USB4_STREAM`, `CONFIG_USB4_CONFIGFS`, and `CONFIG_CONFIGFS_FS`. Use `usb4-rdma-ctl doctor` for capability readback. Close endpoints before changing ConfigFS attributes.
+- `emulated` runs the same reactor on Unix sockets. `emulated-uring` tests registered I/O and CQEs on Linux without physical USB4 devices.
 
-~~~sh
-cargo build --locked --release -p usb4-rdma-daemon
-make -C adapters/ofi
-sh adapters/ofi/test.sh
-~~~
-
-## Linux `USB4STREAM` Prerequisites
-
-- Requires Linux kernel support for `CONFIG_USB4_STREAM`, `CONFIG_USB4_CONFIGFS`, and `CONFIG_CONFIGFS_FS`.
-- Check sysfs and ConfigFS with `usb4-rdma-daemon doctor`.
-- Readiness polling (`--backend usb4`) defaults to per-link worker threads, a 256-entry kernel ring, 8,192 ns interrupt moderation, a fabric queue depth of 64, 64-frame TX batching, a 200 µs post-progress spin budget, and a 100 µs active probe interval. The spin budget trades active CPU time for lower latency.
-- Kernel ring polling (`--backend usb4-busy-poll`) is opt-in. Provision matched endpoints with `init --busy-poll --apply`, then use `serve --backend usb4-busy-poll` with their ConfigFS paths. This backend requires the kernel to report `busy_poll=1` and defaults to per-link worker threads, a 500 µs post-progress spin budget, and a 50 µs active probe interval.
-- `io_uring` (`--backend uring`, compiled with `--features uring`) requires `throttling_ns = 0` on ConfigFS endpoints; `SQPOLL` defaults off.
-- Never modify ConfigFS attributes while a `/dev/tbstream*` endpoint is open.
-
-## Verification Separation
-
-Report these checks separately.
-1. **Unit, property & `loom` tests** (`cargo test --workspace`)
-2. **Emulated multiprocess RDMA & C11 ABI tests** (`rdma_integration.rs`, `scripts/test-c-api.sh`)
-3. **Linux `io_uring` & `memfd` seal tests** (Linux host with `--all-features` and a native backend run)
-4. **Physical Linux `USB4STREAM` cable qualification** (two or more hosts connected by physical USB4 cables)
+Report simulator, multiprocess emulation, Linux `io_uring`, physical USB4STREAM, and accelerator runtime evidence individually.

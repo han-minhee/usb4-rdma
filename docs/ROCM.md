@@ -8,16 +8,16 @@ nonempty `torch.version.hip`.
 ## Install the plugin
 
 ~~~sh
-cargo build --locked --release --workspace --all-features
+cargo build --locked --release -p usb4-nccl-net --no-default-features --features rocm
 cd target/release
-ln -sf librccl_net_usb4.so librccl-net-usb4.so
+cp libusb4_net.so librccl-net-usb4.so
 export LD_LIBRARY_PATH="$PWD${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 export NCCL_NET=Usb4Rdma NCCL_NET_PLUGIN=usb4 NCCL_NET_GDR_LEVEL=LOC
 export NCCL_DEBUG=INFO
 export USB4_RDMA_SOCKET="$HOME/.local/run/usb4-rdma/node.sock"
 ~~~
 
-For the Linux bundle, add its `lib` directory to `LD_LIBRARY_PATH`.
+Use ROCm 10.2 with RCCL 2.32.3 for the net v12 build. For the bundle, add its `lib` directory to `LD_LIBRARY_PATH`. The CUDA artifact uses the same net v12 interface with `--features cuda`, `libnccl-net-usb4.so`, and NCCL 2.32.6.
 
 In a container, expose the ROCm GPU devices and mount the daemon socket
 directory. Use the same Linux user ID for the container process and daemon.

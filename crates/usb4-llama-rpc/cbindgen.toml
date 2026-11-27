@@ -1,0 +1,4 @@
+language = "C"
+include_guard = "USB4_RPC_H"
+cpp_compat = true
+usize_is_size_t = true

@@ -1,0 +1,22 @@
+[package]
+name = "usb4-gpu-staging"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Pinned host staging for GPU transfers over USB4"
+
+[features]
+default = []
+cuda = ["dep:libloading"]
+rocm = ["dep:libloading"]
+ze = ["dep:libloading"]
+uma = []
+
+[dependencies]
+usb4-proto.workspace = true
+libloading = { workspace = true, optional = true }
+
+[lints]
+workspace = true

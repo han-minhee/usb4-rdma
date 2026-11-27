@@ -1,12 +1,11 @@
 # usb4-rdma
 
 Connect Linux hosts over direct USB4 cables, with one daemon per host.
-Use Rust or C11 for remote memory, Open MPI for host messages, or RCCL for
-ROCm collectives and tensor-parallel inference.
+Use Rust for remote memory, libfabric for MPI, or the NCCL/RCCL and ggml-rpc plugins for distributed model workloads.
 
 [Connect two hosts](docs/QUICKSTART.md) · [Benchmark results](benchmarks/README.md) · [Release build](docs/RELEASE.md)
 
-## Latest results
+## Published 0.1 baseline
 
 Two FEVM FAEX1 hosts (Ryzen AI Max+ 395 / Radeon 8060S), two 40 Gbit/s USB4
 cables, and 10 GbE TCP. Release tests used Fedora Linux 44 Server and
@@ -33,16 +32,17 @@ Ubuntu 26.04.1 LTS. [Test devices and kernels](docs/QUALIFICATION.md#test-device
 ## Quick start
 
 Use Linux kernels with USB4STREAM and ConfigFS support.
-Check both hosts with `usb4-rdma-daemon doctor`. Follow the [USB4 setup guide](docs/QUICKSTART.md),
+Check both hosts with `usb4-rdma-ctl doctor`. Follow the [USB4 setup guide](docs/QUICKSTART.md),
 then use the [Open MPI guide](docs/MPI.md) or the [ROCm and inference guide](docs/ROCM.md).
 
 ## Support
 
 | Interface | Release scope |
 | --- | --- |
-| Rust and C11 | Tagged send/receive, registered host memory, and one-sided reads and writes |
-| Open MPI | Host-memory messages and collectives via OFI. |
-| ROCm | RCCL network plugin with host staging. |
+| Rust | Tagged send/receive, registered host memory, and one-sided reads and writes |
+| Libfabric | RDM host messages, tags, and manual-progress host RMA. |
+| Collective plugins | NCCL and RCCL net v12 with host staging. |
+| ggml-rpc | Transactional C byte stream. See [llama.cpp integration](adapters/llama-rpc/README.md). |
 | Transport | Linux USB4STREAM, direct cables, and bonded links. The daemon stages data through host memory. |
 
 The [roadmap](docs/ROADMAP.md) tracks verbs, MPI one-sided windows, UCX, GPU-aware

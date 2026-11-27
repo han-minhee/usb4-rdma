@@ -1,0 +1,28 @@
+[package]
+name = "usb4-nccl-net"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "NCCL/RCCL v12 network plugin adapter for usb4-rdma"
+
+[lib]
+name = "usb4_net"
+crate-type = ["cdylib"]
+
+[features]
+default = ["rocm"]
+rocm = ["usb4-gpu-staging/rocm"]
+cuda = ["usb4-gpu-staging/cuda"]
+
+[dependencies]
+usb4-rdma-core.workspace = true
+usb4-gpu-staging.workspace = true
+libc.workspace = true
+
+[build-dependencies]
+cc = "1"
+
+[lints]
+workspace = true

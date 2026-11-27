@@ -35,7 +35,9 @@ mkdir -p -- "${CARGO_TARGET_DIR:-target}"
 CARGO_TARGET_DIR=$(cd -- "${CARGO_TARGET_DIR:-target}" && pwd)
 export CARGO_TARGET_DIR
 cargo build --locked --release --workspace --all-features
-U4RD_PROFILE=release sh scripts/test-c-api.sh
+U4RD_PROFILE=release sh scripts/test-plugins.sh
+cargo build --locked --release -p usb4-nccl-net --no-default-features --features cuda --target-dir "$work/cuda"
+cargo build --locked --release -p usb4-nccl-net --no-default-features --features rocm --target-dir "$work/rocm"
 make -C adapters/ofi
 sh adapters/ofi/test.sh --idle-check
 sh adapters/ofi/test.sh --correctness
@@ -43,11 +45,12 @@ sh adapters/ofi/test.sh --correctness
 bundle=$work/$name
 mkdir -p "$bundle"/{bin,lib}
 git archive "$revision" -- README.md LICENSE NOTICE CONTRIBUTING.md SECURITY.md \
-    include docs examples benchmarks scripts/bench-usb4-vs-eth.py scripts/bench-rocm-rccl.py |
+    include docs examples benchmarks adapters/llama-rpc scripts/bench-usb4-vs-eth.py scripts/bench-rocm-rccl.py |
     tar -xf - -C "$bundle"
-cp "$CARGO_TARGET_DIR"/release/usb4-rdma-{daemon,bench} "$bundle/bin/"
-cp "$CARGO_TARGET_DIR"/release/lib{usb4_rdma,usb4-fi,rccl_net_usb4}.so "$bundle/lib/"
-ln -s librccl_net_usb4.so "$bundle/lib/librccl-net-usb4.so"
+cp "$CARGO_TARGET_DIR"/release/usb4-rdma-ctl "$bundle/bin/"
+cp "$CARGO_TARGET_DIR"/release/lib{usb4-fi,usb4_rpc}.so "$bundle/lib/"
+cp "$work/cuda/release/libusb4_net.so" "$bundle/lib/libnccl-net-usb4.so"
+cp "$work/rocm/release/libusb4_net.so" "$bundle/lib/librccl-net-usb4.so"
 printf '%s\n' "$revision" > "$bundle/SOURCE_REVISION"
 python3 scripts/bundle-licenses.py --target x86_64-unknown-linux-gnu --output "$bundle/licenses"
 

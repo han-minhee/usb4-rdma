@@ -92,7 +92,7 @@ pub struct WorkCompletion {
     pub status: WcStatus,
     pub opcode: WcOpcode,
     pub byte_len: u64,
-    pub tag_or_imm: u32,
+    pub tag_or_imm: u64,
     pub has_imm: bool,
     pub qp_id: u64,
 }

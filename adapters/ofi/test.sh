@@ -3,7 +3,7 @@
 set -eu
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 target=${CARGO_TARGET_DIR:-"$repo/target"}
-daemon="$target/release/usb4-rdma-daemon"
+daemon="$target/release/usb4-rdma-ctl"
 test -x "$daemon"
 test -f "$target/release/libusb4-fi.so"
 work=$(mktemp -d /tmp/u4rd-ofi.XXXXXX)

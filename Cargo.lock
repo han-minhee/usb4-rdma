@@ -483,6 +483,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c938015719552d665fd0553b90d96cd7ff58e83e4c061ca99e6bb78865a72752"
 
 [[package]]
+name = "pkg-config"
+version = "0.3.34"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -902,104 +908,98 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
 
 [[package]]
-name = "usb4-rdma"
-version = "0.1.0"
+name = "usb4-gpu-staging"
+version = "0.2.0"
 dependencies = [
- "libc",
- "usb4-rdma-core",
- "usb4-rdma-ipc",
- "usb4-rdma-transport",
+ "libloading",
+ "usb4-proto",
 ]
 
 [[package]]
-name = "usb4-rdma-bench"
-version = "0.1.0"
+name = "usb4-llama-rpc"
+version = "0.2.0"
 dependencies = [
- "anyhow",
- "clap",
- "crc32fast",
- "serde",
- "serde_json",
- "usb4-rdma",
  "usb4-rdma-core",
+]
+
+[[package]]
+name = "usb4-nccl-net"
+version = "0.2.0"
+dependencies = [
+ "cc",
+ "libc",
+ "usb4-gpu-staging",
+ "usb4-rdma-core",
+]
+
+[[package]]
+name = "usb4-ofi-provider"
+version = "0.2.0"
+dependencies = [
+ "cc",
+ "libc",
+ "pkg-config",
+ "usb4-rdma-core",
+]
+
+[[package]]
+name = "usb4-proto"
+version = "0.2.0"
+dependencies = [
+ "crc32fast",
+ "proptest",
+ "thiserror",
+ "zerocopy",
 ]
 
 [[package]]
 name = "usb4-rdma-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
- "crc32fast",
+ "libc",
  "loom",
- "proptest",
  "serde",
  "sha2",
- "thiserror",
  "toml",
+ "usb4-proto",
+ "usb4-stream-hal",
 ]
 
 [[package]]
-name = "usb4-rdma-daemon"
-version = "0.1.0"
+name = "usb4-rdma-ctl"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
+ "crc32fast",
  "libc",
+ "serde",
  "serde_json",
  "sha2",
- "usb4-rdma",
  "usb4-rdma-core",
- "usb4-rdma-ipc",
- "usb4-rdma-router",
- "usb4-rdma-transport",
+ "usb4-sim",
+ "usb4-stream-hal",
 ]
 
 [[package]]
-name = "usb4-rdma-ipc"
-version = "0.1.0"
+name = "usb4-sim"
+version = "0.2.0"
 dependencies = [
  "libc",
- "loom",
- "thiserror",
+ "usb4-proto",
  "usb4-rdma-core",
+ "usb4-stream-hal",
 ]
 
 [[package]]
-name = "usb4-rdma-ofi"
-version = "0.1.0"
-dependencies = [
- "libc",
- "usb4-rdma",
-]
-
-[[package]]
-name = "usb4-rdma-rccl"
-version = "0.1.0"
-dependencies = [
- "cc",
- "libc",
- "libloading",
- "usb4-rdma-core",
- "usb4-rdma-ipc",
-]
-
-[[package]]
-name = "usb4-rdma-router"
-version = "0.1.0"
-dependencies = [
- "thiserror",
- "usb4-rdma-core",
- "usb4-rdma-transport",
-]
-
-[[package]]
-name = "usb4-rdma-transport"
-version = "0.1.0"
+name = "usb4-stream-hal"
+version = "0.2.0"
 dependencies = [
  "io-uring",
  "libc",
  "serde",
  "thiserror",
- "usb4-rdma-core",
+ "usb4-proto",
 ]
 
 [[package]]
@@ -1116,6 +1116,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c3b93199df0ab874cdf0c6a94f0a0dc3423fe41f1cafb62b8bd7b1deb277aef"
 dependencies = [
  "memchr",
+]
+
+[[package]]
+name = "zerocopy"
+version = "0.8.63"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e5fe1f8f1b06191a00962174c61aa5005e0bb391a6d80d07e24d115c01a92ed8"
+dependencies = [
+ "zerocopy-derive",
+]
+
+[[package]]
+name = "zerocopy-derive"
+version = "0.8.63"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "863ad3ac83293fb4d740aedbfdc9240dd8d1a50c1099acd76ce80ce7c7230c7f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
 ]
 
 [[package]]

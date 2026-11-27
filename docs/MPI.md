@@ -1,7 +1,7 @@
 # Open MPI over USB4
 
 The usb4 libfabric provider handles host-memory messages and collectives via
-Open MPI’s OFI MTL. Qualification used Open MPI 5.0.11 and libfabric 2.4.0
+Open MPI’s OFI MTL. The original release qualification used Open MPI 5.0.11 and libfabric 2.4.0
 on two Linux hosts with one or two ranks per host. MPI launches over IP.
 The provider uses the daemon between hosts and same-user Unix sockets locally.
 
@@ -11,7 +11,7 @@ Install a C/C++ compiler, make, pkg-config, curl, bzip2, and Open MPI’s
 build dependencies. Use the same prefix on both hosts. The script downloads
 and checks both tarballs.
 
-- [Libfabric 2.4.0](https://github.com/ofiwg/libfabric/releases/tag/v2.4.0)
+- [Libfabric 2.7.0](https://github.com/ofiwg/libfabric/releases/tag/v2.7.0)
 - [Open MPI 5.0.11](https://www.open-mpi.org/software/ompi/v5.0/)
 
 ~~~sh
@@ -61,11 +61,10 @@ address entries, 256 outstanding operations and completion entries, and
 the tag and payload in one frame, with credit returned when it is consumed.
 Each rank has up to 4 MiB of bounded storage for unexpected eager messages.
 Larger messages use the offer-and-grant path. Use the same OFI provider
-build across ranks for the U4F3 provider protocol. The provider reserves about
+build across ranks for the U4F4 provider protocol. The provider reserves about
 8 MiB of transmit and 9 MiB of receive registered memory per cross-host peer and
 accepts messages up to 64 MiB. Use MPI_TAG_UB from the running MPI
-library for the application tag limit. Features that depend on FI_RMA,
-FI_ATOMIC, or FI_HMEM remain on the [roadmap](ROADMAP.md).
+library for the application tag limit. Host `FI_RMA` supports one iovec, provider-assigned keys, byte offsets, and target-side manual progress. `FI_ATOMIC` and `FI_HMEM` remain on the [roadmap](ROADMAP.md).
 
 If the OFI provider is unavailable, check that fi_info can find
 libusb4-fi.so, inspect library dependencies with ldd, and verify the

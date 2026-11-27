@@ -65,7 +65,7 @@ def main():
     parser.add_argument("--revision", required=True)
     parser.add_argument("--transport", required=True, choices=["Socket", "Usb4Rdma"])
     parser.add_argument("--node", action="append", default=[], metavar="SSH_ALIAS")
-    parser.add_argument("--daemon", default="usb4-rdma-daemon")
+    parser.add_argument("--daemon", default="usb4-rdma-ctl")
     parser.add_argument("--socket", default="/run/usb4-rdma/node.sock")
     parser.add_argument("--min-tokens", type=int, default=0,
                         help="SGLang minimum generated tokens, up to 64")

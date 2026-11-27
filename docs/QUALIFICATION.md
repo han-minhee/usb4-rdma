@@ -1,4 +1,4 @@
-# Release qualification
+# Published 0.1 qualification and current acceptance gates
 
 Build the same source on both Linux hosts. Test one and two MPI ranks per
 host and ROCm tensor-parallel inference. Publish results with transport,

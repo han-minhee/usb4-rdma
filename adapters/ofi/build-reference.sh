@@ -16,14 +16,14 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 cd "$work"
 jobs=${BUILD_JOBS:-$(getconf _NPROCESSORS_ONLN)}
-fabric=libfabric-2.4.0
+fabric=libfabric-2.7.0
 mpi=openmpi-5.0.11
 
 curl --fail --silent --show-error --location --retry 3 \
-    "https://github.com/ofiwg/libfabric/releases/download/v2.4.0/$fabric.tar.bz2" -o "$fabric.tar.bz2"
+    "https://github.com/ofiwg/libfabric/releases/download/v2.7.0/$fabric.tar.bz2" -o "$fabric.tar.bz2"
 printf '%s  %s\n' \
-    0d3036a69c7f7d0e65f4ea9dbd96face3758e74f947842d3925e2b0a9a2ea99f8c2be394a1e532bba268ed9cfcab92d658bc536fe82911542159c64f5c667cc3 \
-    "$fabric.tar.bz2" | sha512sum --check -
+    366000427e194d4ce22e272519b608afbebb1fc9915bcf5da924157a8a47fe10 \
+    "$fabric.tar.bz2" | sha256sum --check -
 tar --no-same-owner -xjf "$fabric.tar.bz2"
 (
     cd "$fabric"

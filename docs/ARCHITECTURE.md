@@ -1,39 +1,23 @@
 # Architecture
 
-`usb4-rdma` separates transport, routing, memory ownership, and workload adapters.
+One `usb4-rdma-ctl serve` process per host owns the USB4STREAM endpoints. Applications use the Rust API or load an independent adapter. The reactor is shared across the transport paths and assigns queue pairs, memory keys, credits, and rails.
 
-## Layer Stack
+| Crate | Responsibility |
+| --- | --- |
+| `usb4-proto` | Portable little-endian wire frames, borrowed header validation, CRC32, reassembly, and pooled packet storage |
+| `usb4-stream-hal` | `StreamTransport`, ConfigFS and sysfs, device claims, kernel busy-poll workers, and fixed-buffer `io_uring` |
+| `usb4-rdma-core` | Fabric routing, per-hop flow control, QP/CQ progress, memory protection, and same-user Unix IPC |
+| `usb4-sim` | Deterministic in-memory stream faults and Unix-socket emulation |
+| `usb4-gpu-staging` | Pinned CUDA, ROCm, and Level Zero copy buffers and a verified UMA mapping interface |
+| `usb4-nccl-net` | Separate vendor builds of the NCCL and RCCL net v12 plugin |
+| `usb4-ofi-provider` | Libfabric RDM tagged messaging and manual-progress host RMA |
+| `usb4-llama-rpc` | Transactional byte stream and C ABI for ggml-rpc |
+| `usb4-rdma-ctl` | Provisioning, diagnostics, daemon entry point, and benchmarks |
 
-1. **`usb4-rdma-core`** (`#![forbid(unsafe_code)]`)
-   - Cluster topology schema (`Cluster`, `Node`, `Link`) with connected-graph validation and canonical SHA-256 topology digest.
-   - `U4RD` v1 wire header (104 bytes), `Packet`, and setup-allocated `PacketPool`.
-   - Vendor-neutral RDMA primitives: `AccessFlags`, `WcOpcode`, `WcStatus`, `WorkCompletion`, `DeviceAttr`, `EndpointHandle`.
+The HAL and simulator share the same framer. The core links to the HAL's transport interface. The plugins link to core without exposing vendor types to the reactor. Cargo builds each plugin as its own shared library.
 
-2. **`usb4-rdma-transport`**
-   - Defines `LinkBackend` (`capabilities`, `try_submit`, `poll`, `shutdown`) and `LinkCapabilities`.
-   - `configfs.rs` discovers and provisions Linux `USB4STREAM` links. `StreamLink` polls readiness or busy-polls, with up to 64 frames per TX batch and 32 frames of RX read-ahead.
-   - `ThreadedLink` adds per-link workers. `UringLink` uses fixed `io_uring` buffers (`--features uring`). `Bond` stripes transfers above 32 KiB in 32 KiB chunks. `SimIo` injects deterministic faults.
-   - `MemoryDomain` defines `Host` and reserves `DmaBuf`. The core has no GPU SDK dependency.
+The fabric reserves separate bounded control, direct, and transit queues. Control traffic can advance when a peer's bulk class is backpressured. Multi-rail frame reassembly is offset-based. An operation waits for remote commit before publishing success. A cable failure terminates the epoch and retires outstanding work.
 
-3. **`usb4-rdma-router`**
-   - Deterministic BFS spanning-tree `Routes`: direct neighbors always use their direct edge; multi-hop pairs traverse an acyclic spanning tree rooted at the lowest `NodeId`.
-   - `Fabric` state machine: incarnation-nonce `Hello`/`HelloAck`, active (100 µs for `usb4` readiness, 50 µs for `usb4-busy-poll`) and idle (`timeout / 4`) `Ping`/`Pong` liveness, separate bounded control / direct / transit queues, hop-credit flow control across `Data`, `RdmaWrite`, and `RdmaReadResp` frames, and strict fail-stop epoch semantics.
+For one-sided SDK memory, core maps a sealed `memfd` owned by the client. OFI can also register ordinary host memory. That path progresses through its OFI endpoint and core host-memory registry, which validates the key and copies before producing an acknowledgement. The core tagged endpoint owns mask matching, eager and rendezvous flow, and the host software RMA envelope over QPs. The OFI library maps libfabric calls and CQ entries to that endpoint.
 
-4. **`usb4-rdma-ipc`**
-   - Lock-free 64-slot shared-memory IPC arena (`1 MiB` window per slot) with atomic `FREE -> POSTED -> BUSY -> READY -> CONSUMED -> COMPLETE/FAILED` ownership (`loom`-checked).
-   - Per-client Unix domain socket carrying the initial `Welcome` + arena FD (`SCM_RIGHTS`) and control-plane `CTRL_REG_MR` / `CTRL_DEREG_MR` requests for shared-memory MRs.
-   - Exclusive `.lock` inode and fsynced epoch journal rejecting epoch reuse at the same socket even after `SIGKILL`.
-
-5. **`usb4-rdma-daemon`**
-   - Single-process per-node daemon owning link FDs and mapped client MRs.
-   - Full-duplex Reliable Connected (RC) Queue Pairs supporting simultaneous two-sided `SEND`/`RECV`/`PEEK` and one-sided `RDMA_WRITE` / `RDMA_WRITE_WITH_IMM` / `RDMA_READ`.
-   - `MrTable` enforces per-client MR count and total mapped-byte budgets, random 64-bit `rkey` capabilities, connection-owner checks, `AccessFlags`, and deferred unmap draining for active `RDMA_READ` responders.
-
-6. **`usb4-rdma` + `include/usb4_rdma.h`**
-   - Rust SDK (`Context`, `ProtectionDomain`, `OwnedMr`, `BorrowedMr`, `CompletionQueue`, `Listener`, `QueuePair`) and C11 FFI (`u4rd_*`, `catch_unwind`-guarded).
-   - Transparently chunks transfers larger than `WINDOW` (1 MiB), enforces per-QP send/write FIFO ordering, and advances all active ops on a `Context` whenever any `CompletionQueue` is polled.
-
-
-7. **Optional workload adapters**
-   - `usb4-rdma-ofi` and `adapters/ofi` provide the libfabric tagged RDM interface used by Open MPI. Ranks on one host exchange messages over same-user Unix sockets. Ranks on separate hosts use SDK queue pairs. The provider sends messages of up to 16 KiB eagerly. Bounded queues preserve tag matching and reserve space for unexpectedly arriving data. Large messages use offers and grants.
-   - `usb4-rdma-rccl` implements the RCCL network plugin ABI with host staging for ROCm devices.
+See [wire protocol](PROTOCOL.md), [memory ownership](MEMORY.md), and [qualification](QUALIFICATION.md).

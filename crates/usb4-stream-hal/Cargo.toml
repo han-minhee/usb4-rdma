@@ -1,0 +1,24 @@
+[package]
+name = "usb4-stream-hal"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "USB4 stream, io_uring, and bonded link backends for usb4-rdma"
+
+[features]
+default = []
+uring = ["dep:io-uring"]
+
+[dependencies]
+usb4-proto.workspace = true
+thiserror.workspace = true
+libc.workspace = true
+serde.workspace = true
+
+[target.'cfg(target_os = "linux")'.dependencies]
+io-uring = { version = "0.7", optional = true }
+
+[lints]
+workspace = true

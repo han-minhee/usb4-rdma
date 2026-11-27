@@ -1,0 +1,18 @@
+[package]
+name = "usb4-llama-rpc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Transactional byte-stream bridge for ggml-rpc"
+
+[lib]
+name = "usb4_rpc"
+crate-type = ["cdylib"]
+
+[dependencies]
+usb4-rdma-core.workspace = true
+
+[lints]
+workspace = true

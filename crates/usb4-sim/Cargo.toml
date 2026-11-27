@@ -1,0 +1,22 @@
+[package]
+name = "usb4-sim"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Deterministic in-memory USB4 stream and Unix-socket test transports"
+
+[dependencies]
+usb4-proto.workspace = true
+usb4-stream-hal.workspace = true
+libc.workspace = true
+
+[features]
+uring = ["usb4-stream-hal/uring"]
+
+[lints]
+workspace = true
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+usb4-rdma-core.workspace = true

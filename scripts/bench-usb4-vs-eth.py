@@ -232,13 +232,9 @@ def stop_run(host: str, remote_dir: str) -> bool:
     script = r"""
 cd "$1" || exit 1
 running() {
-    [ -e "/proc/$pid/exe" ] && [ "$(readlink "/proc/$pid/exe")" = "$PWD/$binary" ]
+    [ -e "/proc/$pid/exe" ] && [ "$(readlink "/proc/$pid/exe")" = "$PWD/usb4-rdma-ctl" ]
 }
-for binary in usb4-rdma-bench usb4-rdma-daemon; do
-    case "$binary" in
-        usb4-rdma-bench) file=bench-server.pid ;;
-        usb4-rdma-daemon) file=daemon.pid ;;
-    esac
+for file in bench-server.pid daemon.pid; do
     [ -f "$file" ] || continue
     pid=$(cat "$file")
     case "$pid" in ""|*[!0-9]*) exit 1 ;; esac
@@ -273,11 +269,9 @@ def cmd_run(args: argparse.Namespace) -> int:
         if len(svcs_a) * args.streams_per_cable > 256:
             sys.exit("error: at most 256 fresh endpoints are supported per host")
 
-    daemon_local = Path(args.artifacts_dir) / "usb4-rdma-daemon"
-    bench_local = Path(args.artifacts_dir) / "usb4-rdma-bench"
-    for p in (daemon_local, bench_local):
-        if not p.is_file():
-            sys.exit(f"error: missing binary {p}")
+    binary = Path(args.artifacts_dir) / "usb4-rdma-ctl"
+    if not binary.is_file():
+        sys.exit(f"error: missing binary {binary}")
 
     # Preflight disk headroom & ConfigFS before touching either host.
     for label, host in [("host_a", args.host_a), ("host_b", args.host_b)]:
@@ -292,7 +286,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     epoch = secrets.randbelow((1 << 53) - 1) + 1
     throttling_ns = args.throttling_ns
     if throttling_ns is None:
-        throttling_ns = 0 if args.backend in ("uring", "usb4-busy-poll") else 8192
+        throttling_ns = 0
     if args.backend == "uring" and throttling_ns != 0:
         sys.exit("error: io_uring requires --throttling-ns 0")
     serve_overrides = "".join(
@@ -306,9 +300,8 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     for host in (args.host_a, args.host_b):
         ssh(host, f"umask 077 && mkdir {shlex.quote(remote_dir)}")
-        scp_to(daemon_local, host, f"{remote_dir}/usb4-rdma-daemon")
-        scp_to(bench_local, host, f"{remote_dir}/usb4-rdma-bench")
-        ssh(host, f"chmod +x {shlex.quote(remote_dir)}/usb4-rdma-daemon {shlex.quote(remote_dir)}/usb4-rdma-bench")
+        scp_to(binary, host, f"{remote_dir}/usb4-rdma-ctl")
+        ssh(host, f"chmod +x {shlex.quote(remote_dir)}/usb4-rdma-ctl")
 
     owned_endpoints = [] if create_fresh_endpoints else None
     cfg_local = None
@@ -324,7 +317,7 @@ def cmd_run(args: argparse.Namespace) -> int:
                 ep_a, ep_b = provision_pair(
                     args.host_a,
                     args.host_b,
-                    f"{remote_dir}/usb4-rdma-daemon",
+                    f"{remote_dir}/usb4-rdma-ctl",
                     sa,
                     sb,
                     prefix + suffix,
@@ -348,7 +341,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         sock_b = f"{remote_dir}/node1.sock"
         for host, node, sock in [(args.host_a, 0, sock_a), (args.host_b, 1, sock_b)]:
             cmd = (
-                f"nohup {shlex.quote(remote_dir)}/usb4-rdma-daemon serve "
+                f"nohup {shlex.quote(remote_dir)}/usb4-rdma-ctl serve "
                 f"--config {shlex.quote(remote_dir)}/cluster.toml --node {node} "
                 f"--socket {shlex.quote(sock)} --backend {args.backend} {serve_overrides}"
                 f">{shlex.quote(remote_dir)}/daemon.log 2>&1 < /dev/null & echo $! > {shlex.quote(remote_dir)}/daemon.pid"
@@ -358,8 +351,8 @@ def cmd_run(args: argparse.Namespace) -> int:
         # Wait until both daemons report fabric_ready=true.
         deadline = time.monotonic() + 20.0
         while time.monotonic() < deadline:
-            r0 = ssh(args.host_a, f"{shlex.quote(remote_dir)}/usb4-rdma-daemon monitor --socket {shlex.quote(sock_a)} --links", check=False)
-            r1 = ssh(args.host_b, f"{shlex.quote(remote_dir)}/usb4-rdma-daemon monitor --socket {shlex.quote(sock_b)} --links", check=False)
+            r0 = ssh(args.host_a, f"{shlex.quote(remote_dir)}/usb4-rdma-ctl monitor --socket {shlex.quote(sock_a)} --links", check=False)
+            r1 = ssh(args.host_b, f"{shlex.quote(remote_dir)}/usb4-rdma-ctl monitor --socket {shlex.quote(sock_b)} --links", check=False)
             if all(r.returncode == 0 and json.loads(r.stdout).get("fabric_ready") is True
                    for r in (r0, r1)):
                 break
@@ -369,7 +362,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
         # Start benchmark server on Host B.
         srv_cmd = (
-            f"nohup {shlex.quote(remote_dir)}/usb4-rdma-bench server "
+            f"nohup {shlex.quote(remote_dir)}/usb4-rdma-ctl bench server "
             f"--bind {shlex.quote(args.eth_b)}:{args.port} "
             f"--rdma-socket {shlex.quote(sock_b)} --once "
             f">{shlex.quote(remote_dir)}/bench-server.log 2>&1 < /dev/null & echo $! > {shlex.quote(remote_dir)}/bench-server.pid"
@@ -379,7 +372,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
         # Run benchmark client on Host A.
         cli_cmd = (
-            f"{shlex.quote(remote_dir)}/usb4-rdma-bench client "
+            f"{shlex.quote(remote_dir)}/usb4-rdma-ctl bench client "
             f"--peer {shlex.quote(args.eth_b)}:{args.port} "
             f"--rdma-socket {shlex.quote(sock_a)} "
             f"--suite {args.suite} --only {args.only} "
@@ -436,8 +429,8 @@ def main() -> int:
     p_run.add_argument("--port", type=int, default=19400)
     p_run.add_argument("--services-a", required=True, help="Comma-separated USB4 stream services on Host A (e.g. 0-2.0 or 0-2.0,1-2.0)")
     p_run.add_argument("--services-b", required=True, help="Comma-separated USB4 stream services on Host B (e.g. 0-2.1 or 0-2.1,1-2.1)")
-    p_run.add_argument("--artifacts-dir", required=True, help="Local directory containing Linux x86_64 usb4-rdma-daemon & usb4-rdma-bench")
-    p_run.add_argument("--backend", choices=["usb4", "usb4-busy-poll", "uring"], default="usb4")
+    p_run.add_argument("--artifacts-dir", required=True, help="Local directory containing Linux x86_64 usb4-rdma-ctl")
+    p_run.add_argument("--backend", choices=["usb4-busy-poll", "uring"], default="uring")
     p_run.add_argument("--stream-prefix", default="u4rd",
                        help="Endpoint prefix (fresh endpoints use the first two ASCII characters)")
     p_run.add_argument("--fresh-endpoints", action="store_true",

@@ -1,6 +1,6 @@
 # USB4 RDMA vs Ethernet TCP Benchmarking
 
-`usb4-rdma-bench` compares `USB4STREAM` RDMA against TCP (`TCP_NODELAY`)
+`usb4-rdma-ctl bench` compares `USB4STREAM` RDMA against TCP (`TCP_NODELAY`)
 on the same pair. It matches payloads, warm-ups, and iterations and verifies
 integrity with CRC32.
 
@@ -14,7 +14,7 @@ integrity with CRC32.
 2. **Bandwidth / Goodput (`--suite bandwidth`)**:
    - `ethernet / tcp_uni` & `tcp_duplex`
    - `usb4-rdma / rdma_write_uni`, `rdma_read_uni`, and simultaneous full-duplex `rdma_duplex`
-   - Verifies exact `usb4-rdma-daemon` payload byte counter deltas (`tx_payload_bytes`, `rx_payload_bytes`) so RDMA payload is proven to traverse the USB4 fabric rather than TCP.
+   - Verifies exact `usb4-rdma-ctl` payload byte counter deltas (`tx_payload_bytes`, `rx_payload_bytes`) so RDMA payload is proven to traverse the USB4 fabric rather than TCP.
 3. **2-Node Host `f32` SUM AllReduce (`--suite allreduce`)**:
    - Compares `RDMA_WRITE_WITH_IMM` exchange + vector reduction against TCP exchange + vector reduction with exact element-wise verification.
 
@@ -101,13 +101,13 @@ checks the same payload integrity as the readiness path.
 
 ## ROCm / RCCL GPU Collectives and LLM Serving
 
-`usb4-rdma-rccl` builds `librccl_net_usb4.so` exporting `ncclNetPlugin_v6` and `ncclNetPlugin_v8` as `"Usb4Rdma"`.
+`usb4-nccl-net` builds the RCCL v12 network plugin as `Usb4Rdma`.
 
 1. **Install plugin symlink on `LD_LIBRARY_PATH`:**
    RCCL searches for `librccl-net-<name>.so` when `NCCL_NET_PLUGIN=<name>` is set:
 
 ```sh
-ln -sf librccl_net_usb4.so /opt/usb4-rdma/lib/librccl-net-usb4.so
+cp target/release/libusb4_net.so /opt/usb4-rdma/lib/librccl-net-usb4.so
 ```
 
 2. **Run PyTorch ROCm GPU collectives (`scripts/bench-rocm-rccl.py`):**
@@ -127,7 +127,7 @@ torchrun --nnodes=2 --nproc_per_node=1 --node_rank=<0|1> \
 ```
 
 3. **2-Node Tensor-Parallel (`TP=2`) LLM Serving (SGLang / vLLM):**
-   Pass the same `NCCL_NET=Usb4Rdma NCCL_NET_PLUGIN=usb4 NCCL_NET_GDR_LEVEL=LOC` environment along with `--disable-custom-all-reduce` so inter-node TP AllReduce traffic uses RCCL over `usb4-rdma`. Confirm `NCCL INFO Using network Usb4Rdma` in startup logs and non-zero payload deltas in `usb4-rdma-daemon monitor --links`.
+   Pass the same `NCCL_NET=Usb4Rdma NCCL_NET_PLUGIN=usb4 NCCL_NET_GDR_LEVEL=LOC` environment along with `--disable-custom-all-reduce` so inter-node TP AllReduce traffic uses RCCL over `usb4-rdma`. Confirm `NCCL INFO Using network Usb4Rdma` in startup logs and non-zero payload deltas in `usb4-rdma-ctl monitor --links`.
 
 ## Qualifying a transport profile before inference
 
@@ -158,5 +158,5 @@ latency and throughput runs.
 - Both transports carry host-memory payloads with CRC32 end-to-end verification; upstream Linux `USB4STREAM` still copies between userspace and kernel DMA pages.
 - Avoid running Ethernet benchmarks while unrelated heavy LAN/WAN transfers saturate the same NIC or switch link.
 - Keep emulated software smoke tests distinct from physical USB4/Ethernet hardware measurements.
-- Always stop `usb4-rdma-daemon` gracefully (`SIGINT`/`SIGTERM`, e.g., `docker stop -t 5`) rather than abrupt `SIGKILL` (`docker rm -f`) while `/dev/tbstream*` devices are open. Abrupt termination can trigger upstream Linux `thunderbolt` `hop deactivation failed` errors requiring physical cable reconnection or an orderly host reboot.
-- Match the container UID (`--user $(id -u):$(id -g)`) to the daemon UID because `usb4-rdma-ipc` enforces `SO_PEERCRED` same-UID client authentication on Linux.
+- Always stop `usb4-rdma-ctl` gracefully (`SIGINT`/`SIGTERM`, e.g., `docker stop -t 5`) rather than abrupt `SIGKILL` (`docker rm -f`) while `/dev/tbstream*` devices are open. Abrupt termination can trigger upstream Linux `thunderbolt` `hop deactivation failed` errors requiring physical cable reconnection or an orderly host reboot.
+- Match the container UID (`--user $(id -u):$(id -g)`) to the daemon UID because core IPC enforces `SO_PEERCRED` same-UID client authentication on Linux.

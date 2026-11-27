@@ -1,0 +1,19 @@
+[package]
+name = "usb4-proto"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Portable USB4 RDMA wire codec and bounded stream framer"
+
+[dependencies]
+thiserror.workspace = true
+crc32fast.workspace = true
+zerocopy.workspace = true
+
+[dev-dependencies]
+proptest = "1"
+
+[lints]
+workspace = true

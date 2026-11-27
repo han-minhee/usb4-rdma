@@ -132,7 +132,7 @@ def main() -> None:
 
     mode = os.environ.get("BENCH_MODE", os.environ.get("NCCL_NET", "default"))
     sock = os.environ.get("USB4_RDMA_SOCKET", "")
-    daemon_bin = os.environ.get("U4RD_DAEMON_BIN", "usb4-rdma-daemon")
+    daemon_bin = os.environ.get("U4RD_DAEMON_BIN", "usb4-rdma-ctl")
 
     physical = os.environ.get("NCCL_NET") == "Usb4Rdma"
     if physical and not sock:
