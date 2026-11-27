@@ -22,7 +22,7 @@ jobs:
           git -C "$RUNNER_TEMP/llama" checkout -q FETCH_HEAD
           python3 adapters/llama-rpc/prepare.py "$RUNNER_TEMP/llama"
           cmake -S "$RUNNER_TEMP/llama" -B "$RUNNER_TEMP/build" -DGGML_NATIVE=OFF -DGGML_RPC=ON -DGGML_RPC_RDMA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_LIBRARY_PATH="$PWD/target/debug"
-          cmake --build "$RUNNER_TEMP/build" --parallel 3 --target ggml-rpc
+          cmake --build "$RUNNER_TEMP/build" --parallel 3 --target ggml-rpc ggml ggml-cpu
       - name: Verify GGML tensors, graph, idle and link counters
         run: sh adapters/llama-rpc/test.sh "$RUNNER_TEMP/llama" "$RUNNER_TEMP/build"
       - name: Verify competing calls time out during idle and a command still succeeds
