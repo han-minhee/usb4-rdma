@@ -100,9 +100,13 @@ private:
         if (!acquire(guard)) {
             return false;
         }
+        auto *active = transaction;
         auto *bytes = static_cast<uint8_t *>(data);
-        const bool received = allow_idle ? usb4_rpc_recv_after_idle(transaction, bytes)
-                                         : usb4_rpc_recv_exact(transaction, bytes, size);
+        // The owner keeps the transaction while other callers wait with their own deadline.
+        guard.unlock();
+        const bool received = allow_idle ? usb4_rpc_recv_after_idle(active, bytes)
+                                         : usb4_rpc_recv_exact(active, bytes, size);
+        guard.lock();
         return finish(received);
     }
 

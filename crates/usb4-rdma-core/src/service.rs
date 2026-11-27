@@ -875,8 +875,7 @@ impl ServiceState {
                 if j.cursor == window {
                     j.d.length = window as u32;
                     self.recv_index.remove(&key);
-                    if j.d.local_mr_id == 0
-                        && (j.d.flags & FLAG_IPC_INLINE_READY) != 0
+                    if (j.d.local_mr_id != 0 || (j.d.flags & FLAG_IPC_INLINE_READY) != 0)
                         && j.d.offset + window as u64 == j.d.total
                     {
                         let mut ack = self.header(Kind::Ack, j.d);
