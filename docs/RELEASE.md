@@ -13,6 +13,7 @@ Use the pinned Rust toolchain and the Linux prerequisites in
 ```sh
 sh scripts/check.sh
 cargo package --workspace --locked --all-features
+cargo publish --dry-run --workspace --locked --all-features
 ```
 
 Cargo verifies all nine archives in `target/package` using their normalized
@@ -23,15 +24,19 @@ After release approval, authenticate with crates.io via `cargo login` and
 publish the workspace in dependency order:
 
 ```sh
-cargo publish --dry-run --workspace --locked --all-features
 cargo publish --workspace --locked --all-features
 ```
 
 If publishing stops partway, check which `0.1.0` packages are visible in
 the index before retrying. Exclude the versions already uploaded with
 `--exclude <crate>` for each published workspace member. After the uploads,
-verify `cargo install usb4-rdma-ctl --version 0.1.0 --locked` and
-`usb4-rdma-ctl --version` from a clean install directory.
+verify the registry install in a fresh directory:
+
+```sh
+install_dir=$(mktemp -d)
+cargo install usb4-rdma-ctl --version 0.1.0 --locked --root "$install_dir"
+"$install_dir/bin/usb4-rdma-ctl" --version
+```
 
 ## Linux bundle
 
