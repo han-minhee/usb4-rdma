@@ -62,12 +62,11 @@ public:
     }
 
     bool receive(void *data, size_t size) {
-        std::unique_lock<std::mutex> guard(mutex);
-        if (!acquire(guard)) {
-            return false;
-        }
-        const bool received = usb4_rpc_recv_exact(transaction, static_cast<uint8_t *>(data), size);
-        return finish(received);
+        return receive_impl(data, size, false);
+    }
+
+    bool receive_after_idle(void *data) {
+        return receive_impl(data, 1, true);
     }
 
     bool flush() {
@@ -94,6 +93,21 @@ private:
             len -= static_cast<size_t>(result);
         }
         return true;
+    }
+
+    bool receive_impl(void *data, size_t size, bool allow_idle) {
+        std::unique_lock<std::mutex> guard(mutex);
+        if (!acquire(guard)) {
+            return false;
+        }
+        auto *active = transaction;
+        auto *bytes = static_cast<uint8_t *>(data);
+        // The owner keeps the transaction while other callers wait with their own deadline.
+        guard.unlock();
+        const bool received = allow_idle ? usb4_rpc_recv_after_idle(active, bytes)
+                                         : usb4_rpc_recv_exact(active, bytes, size);
+        guard.lock();
+        return finish(received);
     }
 
     bool wait(std::unique_lock<std::mutex> &guard) {

@@ -41,3 +41,13 @@ receive region and publishes completion after writing the full frame. The
 adapter copies the completed payload into the MPI buffer. Registered sends
 keep one daemon request across their transport windows. Ordinary SDK
 receives deliver chunks through leased IPC windows.
+
+### ggml-rpc
+
+Each RPC connection reuses one registered send window and one registered
+receive window. The daemon writes incoming payloads directly into the
+receive window and acknowledges the final chunk without waiting for the
+client to poll. The client reads from the window after completion and
+drains buffered bytes before posting another receive. An idle worker keeps
+one receive posted. The daemon begins its transfer deadline when a send
+matches that receive.

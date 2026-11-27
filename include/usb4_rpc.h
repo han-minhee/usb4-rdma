@@ -68,6 +68,15 @@ bool usb4_rpc_flush(const struct Usb4RpcTransaction *txn);
 bool usb4_rpc_recv_exact(const struct Usb4RpcTransaction *txn, uint8_t *data, size_t len);
 
 /**
+ * Wait for the first byte of a new request while the peer remains connected.
+ * Subsequent reads still use the regular receive deadline.
+ *
+ * # Safety
+ * `txn` is live. `data` points to one exclusively writable byte.
+ */
+bool usb4_rpc_recv_after_idle(const struct Usb4RpcTransaction *txn, uint8_t *data);
+
+/**
  * # Safety
  * `txn` is null or a uniquely owned live transaction. This consumes it exactly once.
  */

@@ -1,6 +1,5 @@
 mod two_sided;
 
-use crate::Fabric;
 use crate::ipc::*;
 use crate::mr_table::MrTable;
 use crate::{
@@ -8,6 +7,7 @@ use crate::{
     protocol::{CHUNK, FLAG_DIRECT, FLAG_WITH_IMM, FrameHeader, Kind},
     reassembly::mark_window_bitmap,
 };
+use crate::{Fabric, LinkFailure};
 use std::{
     collections::{BTreeMap, HashMap, VecDeque},
     time::{Duration, Instant},
@@ -159,7 +159,17 @@ impl Service {
         }
     }
 
-    pub fn run(mut self, spin_us: u64, stopping: impl Fn() -> bool) -> Result<()> {
+    pub fn run(self, spin_us: u64, stopping: impl Fn() -> bool) -> Result<()> {
+        self.run_with_link_failure_report(spin_us, stopping, |_| {})
+    }
+
+    /// Runs the service and reports link-specific evidence on terminal failure when available.
+    pub fn run_with_link_failure_report(
+        mut self,
+        spin_us: u64,
+        stopping: impl Fn() -> bool,
+        report_failure: impl FnOnce(LinkFailure),
+    ) -> Result<()> {
         // SAFETY: PR_SET_TIMERSLACK takes only scalar integer arguments and no pointers.
         unsafe {
             libc::prctl(libc::PR_SET_TIMERSLACK, 1, 0, 0, 0);
@@ -295,6 +305,9 @@ impl Service {
                         }
                     }
                     let _ = self.fabric.shutdown();
+                    if let Some(failure) = self.fabric.link_failure() {
+                        report_failure(failure);
+                    }
                     return Err(e);
                 }
             }
@@ -862,8 +875,7 @@ impl ServiceState {
                 if j.cursor == window {
                     j.d.length = window as u32;
                     self.recv_index.remove(&key);
-                    if j.d.local_mr_id == 0
-                        && (j.d.flags & FLAG_IPC_INLINE_READY) != 0
+                    if (j.d.local_mr_id != 0 || (j.d.flags & FLAG_IPC_INLINE_READY) != 0)
                         && j.d.offset + window as u64 == j.d.total
                     {
                         let mut ack = self.header(Kind::Ack, j.d);

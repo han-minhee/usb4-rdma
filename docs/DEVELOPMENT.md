@@ -12,9 +12,23 @@ Configure `PKG_CONFIG_PATH` and `LD_LIBRARY_PATH` for a user-installed libfabric
 
 ## Native profiles
 
+- `usb4` uses readiness-driven I/O with ConfigFS `busy_poll=0` or the attribute
+  absent. It keeps the endpoint's moderation setting. Each link uses a worker
+  by default, with a 200 µs post-progress spin budget and a 100 µs
+  recent-transfer polling interval.
 - `uring` uses ConfigFS endpoints with `busy_poll=0` or the attribute absent, and `throttling=0`. SQPOLL is opt-in.
 - `usb4-busy-poll` uses ConfigFS `busy_poll=1` and per-link workers. Defaults are a 500 µs post-progress spin budget and 50 µs recent-transfer polling interval.
-- Both profiles require `CONFIG_USB4_STREAM`, `CONFIG_USB4_CONFIGFS`, and `CONFIG_CONFIGFS_FS`. Use `usb4-rdma-ctl doctor` for capability readback. Close endpoints before changing ConfigFS attributes.
+- All native profiles require `CONFIG_USB4_STREAM`, `CONFIG_USB4_CONFIGFS`, and `CONFIG_CONFIGFS_FS`. Use `usb4-rdma-ctl doctor` for capability readback. Close endpoints before changing ConfigFS attributes.
 - `emulated` runs the same reactor on Unix sockets. `emulated-uring` tests registered I/O and CQEs on Linux without physical USB4 devices.
 
 Report simulator, multiprocess emulation, Linux `io_uring`, physical USB4STREAM, and accelerator runtime evidence individually.
+
+## Link failure diagnostics
+
+When fabric polling fails on a specific link, `usb4-rdma-ctl serve` reports the
+local node and epoch, the zero-based local port, its configured link ID, and
+the peer node. The local port order matches `monitor --links`. The cause
+records an unready link at the startup deadline, a missed heartbeat deadline,
+a closed stream, or an error while polling that link. The command still
+reports the original error. The local stop flag describes the state when the
+diagnostic is logged and cannot establish which peer began teardown.

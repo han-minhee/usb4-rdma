@@ -6,18 +6,22 @@ use std::{
     path::Path,
     ptr,
     sync::{Arc, Condvar, Mutex},
+    thread,
     time::Duration,
 };
 use usb4_rdma_core::{
     AccessFlags, CompletionQueue, Context, EndpointHandle, Error, Listener, OwnedMr, QueuePair,
-    Result, WcStatus,
+    Result, WcOpcode, WcStatus,
 };
 
 pub const USB4_RPC_HANDLE_BYTES: usize = 20;
 const _: () = assert!(USB4_RPC_HANDLE_BYTES == EndpointHandle::SIZE);
 const WINDOW: usize = usb4_rdma_core::ipc::WINDOW;
 const TIMEOUT: Duration = Duration::from_secs(30);
+const IDLE_POLL: Duration = Duration::from_micros(200);
 const STREAM_TAG: u64 = 1;
+const SEND_WR: u64 = 1;
+const RECV_WR: u64 = 2;
 
 pub struct Usb4RpcListener {
     listener: Listener,
@@ -33,7 +37,14 @@ pub struct Usb4RpcTransaction {
 
 struct Connection {
     stream: Mutex<Stream>,
+    transaction: Mutex<TransactionState>,
     available: Condvar,
+}
+
+#[derive(Default)]
+struct TransactionState {
+    busy: bool,
+    failed: bool,
 }
 
 struct Stream {
@@ -45,7 +56,6 @@ struct Stream {
     staged: usize,
     received: usize,
     consumed: usize,
-    busy: bool,
     failed: bool,
 }
 
@@ -55,9 +65,17 @@ impl Stream {
             return Ok(());
         }
         self.qp
-            .post_send(1, &self.tx_mr, 0..self.staged, STREAM_TAG)?;
-        if self.tx.poll_blocking(TIMEOUT)?.status != WcStatus::Success {
+            .post_send(SEND_WR, &self.tx_mr, 0..self.staged, STREAM_TAG)?;
+        let completion = self.tx.poll_blocking(TIMEOUT)?;
+        if completion.status != WcStatus::Success {
             return Err(Error::Disconnected);
+        }
+        if completion.wr_id != SEND_WR
+            || completion.opcode != WcOpcode::Send
+            || completion.qp_id != self.qp.id()
+            || completion.byte_len != self.staged as u64
+        {
+            return Err(Error::Protocol("unexpected RPC send completion"));
         }
         self.staged = 0;
         Ok(())
@@ -76,20 +94,38 @@ impl Stream {
         Ok(())
     }
 
-    fn receive(&mut self, mut data: &mut [u8]) -> Result<()> {
+    fn receive(&mut self, mut data: &mut [u8], mut allow_idle: bool) -> Result<()> {
         while !data.is_empty() {
             if self.received == self.consumed {
-                self.qp.post_recv(2, &self.rx_mr, 0..WINDOW, STREAM_TAG)?;
-                let completion = self.rx.poll_blocking(TIMEOUT)?;
-                if completion.status != WcStatus::Success
+                self.qp
+                    .post_standing_recv(RECV_WR, &self.rx_mr, 0..WINDOW, STREAM_TAG)?;
+                let completion = if allow_idle {
+                    // The daemon starts its transfer deadline when this receive matches.
+                    loop {
+                        if let Some(completion) = self.rx.poll_one()? {
+                            break completion;
+                        }
+                        thread::sleep(IDLE_POLL);
+                    }
+                } else {
+                    self.rx.poll_blocking(TIMEOUT)?
+                };
+                if completion.status != WcStatus::Success {
+                    return Err(Error::Disconnected);
+                }
+                if completion.wr_id != RECV_WR
+                    || completion.opcode != WcOpcode::Recv
+                    || completion.qp_id != self.qp.id()
+                    || completion.tag_or_imm != STREAM_TAG
                     || completion.byte_len == 0
                     || completion.byte_len > WINDOW as u64
                 {
-                    return Err(Error::Disconnected);
+                    return Err(Error::Protocol("unexpected RPC receive completion"));
                 }
                 self.received = completion.byte_len as usize;
                 self.consumed = 0;
             }
+            allow_idle = false;
             let take = data.len().min(self.received - self.consumed);
             self.rx_mr.read_bytes(self.consumed, &mut data[..take])?;
             self.consumed += take;
@@ -119,9 +155,9 @@ impl Usb4RpcConnection {
                 staged: 0,
                 received: 0,
                 consumed: 0,
-                busy: false,
                 failed: false,
             }),
+            transaction: Mutex::default(),
             available: Condvar::new(),
         })))
     }
@@ -129,15 +165,15 @@ impl Usb4RpcConnection {
 
 impl Connection {
     fn begin(self: &Arc<Self>) -> Result<Usb4RpcTransaction> {
-        let state = self.stream.lock().map_err(|_| Error::Disconnected)?;
-        let (mut state, deadline) = self
+        let state = self.transaction.lock().map_err(|_| Error::Disconnected)?;
+        let (mut state, _) = self
             .available
             .wait_timeout_while(state, TIMEOUT, |state| state.busy && !state.failed)
             .map_err(|_| Error::Disconnected)?;
         if state.failed {
             return Err(Error::Disconnected);
         }
-        if deadline.timed_out() {
+        if state.busy {
             return Err(Error::Timeout);
         }
         state.busy = true;
@@ -168,9 +204,12 @@ impl Usb4RpcTransaction {
 
 impl Drop for Usb4RpcTransaction {
     fn drop(&mut self) {
-        if let Ok(mut stream) = self.connection.stream.lock() {
-            stream.failed |= !self.committed || stream.staged != 0;
-            stream.busy = false;
+        let failed = self.connection.stream.lock().map_or(true, |stream| {
+            stream.failed || !self.committed || stream.staged != 0
+        });
+        if let Ok(mut state) = self.connection.transaction.lock() {
+            state.failed = failed;
+            state.busy = false;
         }
         self.connection.available.notify_all();
     }
@@ -329,6 +368,30 @@ pub unsafe extern "C" fn usb4_rpc_recv_exact(
     data: *mut u8,
     len: usize,
 ) -> bool {
+    // SAFETY: this entry point has the same handle and buffer contract as receive_raw.
+    unsafe { receive_raw(txn, data, len, false) }
+}
+
+/// Wait for the first byte of a new request while the peer remains connected.
+/// Subsequent reads still use the regular receive deadline.
+///
+/// # Safety
+/// `txn` is live. `data` points to one exclusively writable byte.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn usb4_rpc_recv_after_idle(
+    txn: *const Usb4RpcTransaction,
+    data: *mut u8,
+) -> bool {
+    // SAFETY: the caller provides one writable byte and a live transaction.
+    unsafe { receive_raw(txn, data, 1, true) }
+}
+
+unsafe fn receive_raw(
+    txn: *const Usb4RpcTransaction,
+    data: *mut u8,
+    len: usize,
+    allow_idle: bool,
+) -> bool {
     guard(false, || {
         // SAFETY: a non-null transaction handle is live for this call.
         let txn = unsafe { txn.as_ref() }.ok_or(Error::Stale)?;
@@ -341,7 +404,10 @@ pub unsafe extern "C" fn usb4_rpc_recv_exact(
         txn.use_stream(|stream| {
             stream.submit()?;
             // SAFETY: the caller retains exclusive access over this writable range.
-            stream.receive(unsafe { std::slice::from_raw_parts_mut(data, len) })
+            stream.receive(
+                unsafe { std::slice::from_raw_parts_mut(data, len) },
+                allow_idle,
+            )
         })?;
         Ok(true)
     })
