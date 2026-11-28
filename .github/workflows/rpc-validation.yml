@@ -1,0 +1,93 @@
+name: RPC candidate validation
+on: push
+permissions:
+  contents: read
+jobs:
+  workspace:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - run: cargo test --locked --workspace
+  rpc:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - run: cargo build --locked -p usb4-rdma-ctl -p usb4-llama-rpc
+      - name: Build the pinned CPU GGML adapter
+        run: |
+          git init -q "$RUNNER_TEMP/llama"
+          git -C "$RUNNER_TEMP/llama" fetch -q --depth=1 https://github.com/ggml-org/llama.cpp.git 171527522610996f5f0acf12334e185156ca8f44
+          git -C "$RUNNER_TEMP/llama" checkout -q FETCH_HEAD
+          python3 adapters/llama-rpc/prepare.py "$RUNNER_TEMP/llama"
+          cmake -S "$RUNNER_TEMP/llama" -B "$RUNNER_TEMP/build" -DGGML_NATIVE=OFF -DGGML_RPC=ON -DGGML_RPC_RDMA=OFF -DLLAMA_CURL=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_LIBRARY_PATH="$PWD/target/debug"
+          cmake --build "$RUNNER_TEMP/build" --parallel 3 --target ggml-rpc ggml ggml-cpu
+      - name: Verify GGML tensors, graph, idle and link counters
+        run: sh adapters/llama-rpc/test.sh "$RUNNER_TEMP/llama" "$RUNNER_TEMP/build"
+      - name: Verify competing calls time out during idle and a command still succeeds
+        run: |
+          cat > "$RUNNER_TEMP/idle.cpp" <<'EOF'
+          #include "usb4_socket.hpp"
+          #include <cassert>
+          #include <future>
+          #include <sys/wait.h>
+          #include <unistd.h>
+          int main(int argc, char **argv) {
+              assert(argc == 3);
+              int pair[2];
+              assert(socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == 0);
+              const pid_t pid = fork();
+              assert(pid >= 0);
+              if (pid == 0) {
+                  close(pair[0]);
+                  assert(setenv("USB4_RDMA_SOCKET", argv[2], 1) == 0);
+                  auto peer = Usb4Socket::bootstrap(pair[1], false);
+                  assert(peer);
+                  std::this_thread::sleep_for(std::chrono::seconds(35));
+                  const uint8_t request = 41;
+                  assert(peer->send(&request, 1) && peer->flush());
+                  uint8_t response = 0;
+                  assert(peer->receive(&response, 1) && response == 42);
+                  return 0;
+              }
+              close(pair[1]);
+              assert(setenv("USB4_RDMA_SOCKET", argv[1], 1) == 0);
+              auto server = Usb4Socket::bootstrap(pair[0], true);
+              assert(server);
+              auto contender = std::async(std::launch::async, [&server] {
+                  std::this_thread::sleep_for(std::chrono::seconds(1));
+                  return server->flush();
+              });
+              uint8_t command = 0;
+              assert(server->receive_after_idle(&command) && command == 41);
+              assert(!contender.get());
+              ++command;
+              assert(server->send(&command, 1) && server->flush());
+              assert(!server->receive_after_idle(&command));
+              int result = 0;
+              assert(waitpid(pid, &result, 0) == pid && result == 0);
+          }
+          EOF
+          c++ -std=c++17 -Wall -Wextra -Werror -pthread -I adapters/llama-rpc -I include "$RUNNER_TEMP/idle.cpp" -L target/debug -lusb4_rpc -Wl,-rpath,"$PWD/target/debug" -o "$RUNNER_TEMP/idle"
+          test_dir=$(mktemp -d)
+          mkdir "$test_dir/links"
+          pids=()
+          cleanup() {
+              rc=$?
+              for pid in "${pids[@]}"; do kill "$pid" 2>/dev/null || true; done
+              wait || true
+              if (( rc != 0 )); then cat "$test_dir/"*.log; fi
+          }
+          trap cleanup EXIT
+          for node in 0 1; do
+              target/debug/usb4-rdma-ctl serve --config examples/two-node.toml --node "$node" --socket "$test_dir/node$node" --backend emulated --emulated-dir "$test_dir/links" > "$test_dir/$node.log" 2>&1 &
+              pids+=("$!")
+          done
+          for i in {1..100}; do
+              if target/debug/usb4-rdma-ctl monitor --socket "$test_dir/node0" >/dev/null 2>&1 &&
+                 target/debug/usb4-rdma-ctl monitor --socket "$test_dir/node1" >/dev/null 2>&1; then break; fi
+              test "$i" -lt 100
+              sleep 0.1
+          done
+          timeout 80 "$RUNNER_TEMP/idle" "$test_dir/node0" "$test_dir/node1"
