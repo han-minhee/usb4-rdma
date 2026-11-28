@@ -49,6 +49,8 @@ jobs:
                   assert(peer->send(&request, 1) && peer->flush());
                   uint8_t response = 0;
                   assert(peer->receive(&response, 1) && response == 42);
+                  uint8_t flushed = 0;
+                  assert(read(pair[1], &flushed, 1) == 1 && flushed == 1);
                   return 0;
               }
               close(pair[1]);
@@ -63,7 +65,11 @@ jobs:
               assert(server->receive_after_idle(&command) && command == 41);
               assert(!contender.get());
               ++command;
-              assert(server->send(&command, 1) && server->flush());
+              assert(server->send(&command, 1));
+              assert(server->flush());
+              // Keep the peer QP alive until the sender observes completion.
+              const uint8_t flushed = 1;
+              assert(write(pair[0], &flushed, 1) == 1);
               assert(!server->receive_after_idle(&command));
               int result = 0;
               assert(waitpid(pid, &result, 0) == pid && result == 0);
