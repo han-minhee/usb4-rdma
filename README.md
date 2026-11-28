@@ -9,7 +9,7 @@
 | Interface | Capabilities |
 | --- | --- |
 | **Daemon & CLI (`usb4-rdma-ctl`)** | Peer discovery (`doctor`), ConfigFS endpoint provisioning (`init`), bonded multi-link daemon (`serve`), and live link telemetry (`monitor --links`). |
-| **Rust SDK (`usb4-rdma`)** | Protection domains, shared `memfd` & local memory registration, two-sided tagged `SEND`/`RECV`, and one-sided `RDMA_WRITE` / `RDMA_READ`. |
+| **Rust SDK (`usb4-rdma-core`)** | Protection domains, shared `memfd` & local memory registration, two-sided tagged `SEND`/`RECV`, and one-sided `RDMA_WRITE` / `RDMA_READ`. |
 | **Libfabric & Open MPI** | `FI_EP_RDM` provider (`usb4`) for host messages, tags, and manual-progress RMA ([MPI guide](docs/MPI.md)). |
 | **NCCL / RCCL plugin** | Net v12 shared library (`librccl-net-usb4.so` / `libnccl-net-usb4.so`) for multi-node PyTorch & SGLang/vLLM collectives ([ROCm guide](docs/ROCM.md)). |
 | **ggml-rpc adapter** | Transactional C byte stream (`libllama_usb4_rpc.so`) for distributed `llama.cpp` ([adapter guide](adapters/llama-rpc/README.md)). |

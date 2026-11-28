@@ -191,9 +191,9 @@ speed_mbps = 40000
         // SAFETY: the test owns the running child with this PID and has not reaped it.
         assert_eq!(unsafe { libc::kill(pid as libc::pid_t, libc::SIGTERM) }, 0);
     }
-    for node in 0..2 {
+    for (node, control) in cluster.controls.iter_mut().enumerate() {
         let mut ack = [0; 52];
-        cluster.controls[node].read_exact(&mut ack).unwrap();
+        control.read_exact(&mut ack).unwrap();
         assert_eq!(ack, frame(node as u32, 2));
     }
     for node in 0..2 {
